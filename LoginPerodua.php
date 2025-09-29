@@ -102,6 +102,13 @@ if(isset($_POST['login'])) {
         .register-btn:hover {
             background: #757575;
         }
+        .back-btn {
+            background: #2196F3;
+            margin-top: 10px;
+        }
+        .back-btn:hover {
+            background: #1976D2;
+        }
         .msg { 
             text-align: center; 
             color: red; 
@@ -124,8 +131,13 @@ if(isset($_POST['login'])) {
             <button type="submit" name="login">Login</button>
         </form>
         <div class="msg"><?= $msg ?></div>
+
         <form action="RegisterPerodua.php" method="get">
             <button type="submit" class="register-btn">Register Here</button>
+        </form>
+
+        <form action="HomePage.php" method="get">
+            <button type="submit" class="back-btn">⬅ Back to Home</button>
         </form>
     </div>
 </body>
