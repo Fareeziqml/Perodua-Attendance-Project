@@ -1,0 +1,248 @@
+<?php
+session_start();
+$conn = new mysqli("localhost", "root", "", "spareparts");
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+
+if(!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
+    header("Location: LoginPerodua.php");
+    exit;
+}
+
+$employee_name = $_SESSION['name'];
+$role = $_SESSION['role'];
+
+/* --- 1. Total Employees --- */
+$total_employees = $conn->query("SELECT COUNT(*) as total FROM employee")->fetch_assoc()['total'];
+
+/* --- 2. Employees by Department (for Pie Chart) --- */
+$dept_sql = "SELECT department, COUNT(*) as total FROM employee GROUP BY department";
+$dept_res = $conn->query($dept_sql);
+$departments = [];
+$dept_counts = [];
+while ($row = $dept_res->fetch_assoc()) {
+    $departments[] = $row['department'];
+    $dept_counts[] = $row['total'];
+}
+
+/* --- 3. Employees by Latest Attendance Status (for Bar Chart) --- */
+$status_sql = "
+    SELECT a.status, COUNT(*) as total
+    FROM attendance a
+    INNER JOIN (
+        SELECT employee_id, MAX(date) as latest_date
+        FROM attendance
+        GROUP BY employee_id
+    ) latest ON a.employee_id = latest.employee_id AND a.date = latest.latest_date
+    GROUP BY a.status
+";
+$status_res = $conn->query($status_sql);
+$statuses = ["MIA/MC" => 0, "OutStation" => 0, "Available" => 0];
+while ($row = $status_res->fetch_assoc()) {
+    $statuses[$row['status']] = $row['total'];
+}
+
+$date_today = date("l, d F Y"); 
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Perodua GM Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        * { box-sizing: border-box; margin:0; padding:0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7f8fa;
+            display: flex;
+            min-height: 100vh;
+        }
+
+       /* Sidebar */
+.sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #1b5e20, #388e3c);
+    color: white;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding-top: 30px;
+    box-shadow: 3px 0 15px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+}
+.sidebar img.logo-main { display: block; margin: 0 auto 25px; width: 160px; border-radius: 20%; }
+.sidebar img.logo-main:hover { transform: scale(1.05); }
+.sidebar h2 { text-align: center; font-size: 26px; margin-bottom: 25px; }
+.sidebar a { display: flex; align-items: center; gap: 12px; padding: 15px 25px; margin: 5px 10px; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s; }
+.sidebar a:hover { background: rgba(255,255,255,0.15); transform: translateX(10px); }
+.sidebar a i { font-size: 18px; }
+
+/* Topbar */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 260px;
+    right: 0;
+    height: 70px;
+    background: #2e7d32;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+.topbar h3 { font-weight: 500; font-size: 18px; }
+.topbar .date-time { font-weight: 400; opacity: 0.85; font-size: 15px; display: flex; gap: 20px; }
+.logout-btn { background: #c62828; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; color:white; }
+.logout-btn:hover { background: #b71c1c; transform: scale(1.05); }
+
+        /* Main content */
+        .main-content { margin-left: 260px; padding: 30px; flex: 1; }
+
+        /* Dashboard cards */
+        .dashboard-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-top: 90px;
+        }
+        .card {
+            flex: 1 1 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            text-align: center;
+        }
+        .card:hover { transform: translateY(-6px); box-shadow: 0 14px 28px rgba(0,0,0,0.2); }
+        .card h1 {
+            font-size: 40px;
+            color: #2e7d32;
+            margin-top: 10px;
+        }
+
+        /* Charts */
+        .charts { display: flex; flex-wrap: wrap; gap: 25px; margin-top: 40px; }
+        .chart-box {
+            flex: 1 1 450px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        .chart-box:hover { transform: translateY(-6px); box-shadow: 0 14px 28px rgba(0,0,0,0.2); }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .charts, .dashboard-cards { flex-direction: column; }
+            .topbar { left: 0; }
+            .main-content { margin-left: 0; margin-top: 70px; }
+            .sidebar { position: fixed; z-index: 1001; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <img src="https://car-logos.org/wp-content/uploads/2022/08/perodua.png" alt="Perodua Logo" class="logo-main">
+    <h2>Perodua</h2>
+    <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
+    <a href="Admindashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
+    <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
+    <a href="AdminEmployeeList.php"><i class="fas fa-users"></i> Update Employee</a>
+</div>
+
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div>
+            <h3>Welcome, <?= htmlspecialchars($employee_name) ?> (<?= $role ?>)</h3>
+            <div class="date-time">
+                <span><?= $date_today ?></span>
+                <span id="clock">--:--:--</span>
+            </div>
+        </div>
+        <form action="logout.php" method="post">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Cards -->
+        <div class="dashboard-cards">
+            <div class="card">
+                <h3>Total Employees</h3>
+                <h1 id="employeeCount">0</h1>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts">
+            <div class="chart-box">
+                <h3>Employees by Department</h3>
+                <canvas id="deptChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Employees by Status (Latest Attendance)</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animate Employee Card
+        const countEl = document.getElementById('employeeCount');
+        let count = 0;
+        const target = <?= $total_employees ?>;
+        const increment = Math.ceil(target / 100);
+        function updateCount() {
+            if(count < target) {
+                count += increment;
+                countEl.textContent = count > target ? target : count;
+                requestAnimationFrame(updateCount);
+            }
+        }
+        updateCount();
+
+        // Pie chart
+        new Chart(document.getElementById('deptChart'), {
+            type: 'pie',
+            data: {
+                labels: <?= json_encode($departments) ?>,
+                datasets: [{ data: <?= json_encode($dept_counts) ?>, backgroundColor: ['#4CAF50','#81C784','#FFB74D','#64B5F6','#BA68C8'] }]
+            },
+            options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, animation:{ animateScale:true, animateRotate:true } }
+        });
+
+        // Bar chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'bar',
+            data: {
+                labels: ['MIA/MC', 'OutStation', 'Available'],
+                datasets: [{ label:'Employees', data:[<?= $statuses['MIA/MC'] ?>,<?= $statuses['OutStation'] ?>,<?= $statuses['Available'] ?>], backgroundColor:['#e57373','#FFD54F','#81c784'] }]
+            },
+            options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } }, animation:{ duration:1000 } }
+        });
+
+        // Real-time clock
+        function updateClock() {
+            const clock = document.getElementById('clock');
+            const now = new Date();
+            clock.textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+
+</body>
+</html>
