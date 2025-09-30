@@ -109,6 +109,13 @@ if(isset($_POST['login'])) {
         .back-btn:hover {
             background: #1976D2;
         }
+        .reset-btn {
+            background: #FF9800;
+            margin-top: 10px;
+        }
+        .reset-btn:hover {
+            background: #F57C00;
+        }
         .msg { 
             text-align: center; 
             color: red; 
@@ -134,6 +141,10 @@ if(isset($_POST['login'])) {
 
         <form action="RegisterPerodua.php" method="get">
             <button type="submit" class="register-btn">Register Here</button>
+        </form>
+
+        <form action="ResetPassword.php" method="get">
+            <button type="submit" class="reset-btn">Request Reset Password</button>
         </form>
 
         <form action="HomePage.php" method="get">
