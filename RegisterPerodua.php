@@ -10,7 +10,6 @@ if(isset($_POST['register'])) {
     $name = $_POST['name'];
     $department = $_POST['department'];
     $role = $_POST['role'];
-    $email = $_POST['email'];
 
     // Handle photo upload
     $photo = null;
@@ -21,8 +20,8 @@ if(isset($_POST['register'])) {
         move_uploaded_file($_FILES["photo"]["tmp_name"], $photo);
     }
 
-    $stmt = $conn->prepare("INSERT INTO employee (employee_id, password, photo, name, department, role, email) VALUES (?,?,?,?,?,?,?)");
-    $stmt->bind_param("sssssss", $employee_id, $password, $photo, $name, $department, $role, $email);
+    $stmt = $conn->prepare("INSERT INTO employee (employee_id, password, photo, name, department, role) VALUES (?,?,?,?,?,?)");
+    $stmt->bind_param("ssssss", $employee_id, $password, $photo, $name, $department, $role);
 
     if($stmt->execute()) {
         $msg = "✅ Registration successful. You can now login.";
@@ -112,7 +111,6 @@ if(isset($_POST['register'])) {
             <input type="text" name="employee_id" placeholder="Employee ID" required>
             <input type="password" name="password" placeholder="Password" required>
             <input type="text" name="name" placeholder="Full Name" required>
-            <input type="email" name="email" placeholder="Email" required>
             <select name="department" required>
                 <option value="">--Select Department--</option>
                 <option>Management</option>
