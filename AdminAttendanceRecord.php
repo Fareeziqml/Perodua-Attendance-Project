@@ -12,41 +12,47 @@ $employee_name = $_SESSION['name'];
 $role = $_SESSION['role'];
 $today = date("Y-m-d");
 
-// Fetch attendance data
+// Fetch today's attendance per employee
 $sql = "
-    SELECT e.employee_id, e.name, e.department, e.photo, a.status, a.note
+    SELECT e.employee_id, e.name, e.department, e.photo, a.status, a.sub_status, a.note, a.date
     FROM employee e
     LEFT JOIN (
-        SELECT t1.*
-        FROM attendance t1
-        INNER JOIN (
-            SELECT employee_id, MAX(date) AS max_date
-            FROM attendance
-            GROUP BY employee_id
-        ) t2 ON t1.employee_id = t2.employee_id AND t1.date = t2.max_date
+        SELECT *
+        FROM attendance
+        WHERE date = '$today'
     ) a ON e.employee_id = a.employee_id
-    ORDER BY 
-        CASE 
-            WHEN a.status = 'MIA' OR a.status = 'MC' OR a.status = 'MIA/MC' THEN 1
+    ORDER BY
+        CASE
+            WHEN a.status IN ('MIA','MC','MIA/MC') THEN 1
             WHEN a.status = 'OutStation' THEN 2
             WHEN a.status = 'Available' THEN 3
             ELSE 4
         END,
-        e.department, e.name
+        e.department,
+        e.name
 ";
 $result = $conn->query($sql);
 
-// Count statistics for cards
+// Count statistics only for today's records
 $stats = ['available'=>0,'outstation'=>0,'mia'=>0,'none'=>0];
-$result->data_seek(0);
+$rows = [];
 while($row = $result->fetch_assoc()){
     $status = strtolower(trim($row['status'] ?? ''));
-    if ($status == "available") $stats['available']++;
-    elseif ($status == "outstation") $stats['outstation']++;
-    elseif ($status == "mia" || $status == "mc" || $status == "mia/mc") $stats['mia']++;
-    else $stats['none']++;
+    $recordDate = $row['date'] ?? '';
+
+    if ($recordDate === $today) {
+        if ($status == "available") $stats['available']++;
+        elseif ($status == "outstation") $stats['outstation']++;
+        elseif ($status == "mia" || $status == "mc" || $status == "mia/mc") $stats['mia']++;
+        else $stats['none']++;
+    } else {
+        $stats['none']++;
+        $row['status'] = 'Not Submitted';
+        $row['sub_status'] = '-';
+        $row['note'] = '-';
+    }
+    $rows[] = $row;
 }
-$result->data_seek(0); // Reset pointer for table display
 ?>
 
 <!DOCTYPE html>
@@ -60,27 +66,8 @@ $result->data_seek(0); // Reset pointer for table display
 body { display: flex; min-height: 100vh; background: #f4f6f9; }
 
 /* Sidebar */
-.sidebar {
-    width: 260px;
-    background: linear-gradient(180deg, #1b5e20, #388e3c);
-    color: white;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    padding-top: 30px;
-    box-shadow: 3px 0 15px rgba(0,0,0,0.2);
-    transition: all 0.3s;
-}
-.sidebar img.logo-main {
-    max-width: 160px;
-    max-height: 160px;
-    width: auto;
-    height: auto;
-    display: block;
-    margin: 0 auto 25px;
-    border-radius: 20%;
-}
+.sidebar { width: 260px; background: linear-gradient(180deg, #1b5e20, #388e3c); color: white; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; box-shadow: 3px 0 15px rgba(0,0,0,0.2); transition: all 0.3s; }
+.sidebar img.logo-main { max-width: 160px; max-height: 160px; width: auto; height: auto; display: block; margin: 0 auto 25px; border-radius: 20%; }
 .sidebar img.logo-main:hover { transform: scale(1.05); }
 .sidebar h2 { text-align: center; font-size: 26px; margin-bottom: 25px; color: #fff; }
 .sidebar a { display: flex; align-items: center; gap: 12px; padding: 15px 25px; margin: 5px 10px; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s; }
@@ -88,21 +75,7 @@ body { display: flex; min-height: 100vh; background: #f4f6f9; }
 .sidebar a i { font-size: 18px; }
 
 /* Topbar */
-.topbar {
-    position: fixed;
-    top: 0;
-    left: 260px;
-    right: 0;
-    height: 70px;
-    background: #2e7d32;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 30px;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    z-index: 1000;
-}
+.topbar { position: fixed; top: 0; left: 260px; right: 0; height: 70px; background: #2e7d32; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; }
 .topbar h3 { font-weight: 500; font-size: 18px; }
 .topbar .date-time { font-weight: 400; opacity: 0.85; font-size: 15px; display: flex; gap: 20px; }
 .logout-btn { background: #c62828; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; color:white;  }
@@ -119,12 +92,7 @@ body { display: flex; min-height: 100vh; background: #f4f6f9; }
 .card p { font-size: 14px; color: #555; }
 
 /* Container */
-.container {
-    background: #fff;
-    padding: 25px 30px;
-    border-radius: 15px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-}
+.container { background: #fff; padding: 25px 30px; border-radius: 15px; box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
 
 /* Headings */
 h2 { text-align: center; color: #2e7d32; margin-bottom: 15px; font-size: 28px; }
@@ -215,30 +183,37 @@ img { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; }
         <table>
             <tr>
                 <th>No</th>
+                <th>Employee ID</th>
                 <th>Photo</th>
                 <th>Name</th>
                 <th>Department</th>
                 <th>Status</th>
+                <th>Sub-Status</th>
                 <th>Note</th>
             </tr>
             <?php 
             $no = 1;
-            while($row = $result->fetch_assoc()): 
-                $status = strtolower(trim($row['status'] ?? '')); 
+            foreach($rows as $row): 
+                $status = strtolower(trim($row['status'] ?? ''));
+                $recordDate = $row['date'] ?? '';
                 $class = "status-none";
-                if ($status == "mia" || $status == "mc" || $status == "mia/mc") $class="status-mia";
-                elseif ($status == "outstation") $class="status-out";
-                elseif ($status == "available") $class="status-avail";
+                if ($recordDate === $today) {
+                    if ($status == "mia" || $status == "mc" || $status == "mia/mc") $class="status-mia";
+                    elseif ($status == "outstation") $class="status-out";
+                    elseif ($status == "available") $class="status-avail";
+                }
             ?>
             <tr class="<?= $class ?>">
                 <td><?= $no++ ?></td>
+                <td><?= htmlspecialchars($row['employee_id']) ?></td>
                 <td><?php if($row['photo']): ?><img src="<?= htmlspecialchars($row['photo']) ?>" alt="Photo"><?php else: ?><span>No Photo</span><?php endif; ?></td>
                 <td><?= htmlspecialchars($row['name']) ?></td>
                 <td><?= htmlspecialchars($row['department']) ?></td>
                 <td><?= htmlspecialchars($row['status'] ?? 'Not Submitted') ?></td>
+                <td><?= htmlspecialchars($row['sub_status'] ?? '-') ?></td>
                 <td><?= htmlspecialchars($row['note'] ?? '-') ?></td>
             </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         </table>
     </div>
 </div>
