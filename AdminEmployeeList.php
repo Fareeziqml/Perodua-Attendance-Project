@@ -114,10 +114,36 @@ body { background: #f4f6f8; display: flex; min-height: 100vh; color:#333; }
     border-radius: 15%;
     object-fit: contain;
 }
-.sidebar h2 { text-align: center; font-size: 24px; margin-bottom: 25px; font-weight: 600; color:white;}
-.sidebar a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; margin: 5px 10px; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s; color:white;}
-.sidebar a:hover { background: rgba(255,255,255,0.15); transform: translateX(5px); }
-.sidebar i { font-size: 18px; }
+.sidebar h2 { 
+    text-align: center; 
+    font-size: 24px; 
+    margin-bottom: 25px; 
+    font-weight: 600; 
+    color:white;
+}
+
+.sidebar a { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    padding: 12px 20px; 
+    margin: 5px 10px; 
+    color: white; 
+    text-decoration: none; 
+    border-radius: 8px; 
+    font-weight: 500; 
+    transition: all 0.3s; 
+    color:white;
+}
+
+.sidebar a:hover { 
+    background: rgba(255,255,255,0.15); 
+    transform: translateX(5px); 
+}
+
+.sidebar i {
+    font-size: 18px; 
+}
 
 /* Topbar */
 .topbar {
@@ -133,50 +159,222 @@ body { background: #f4f6f8; display: flex; min-height: 100vh; color:#333; }
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     z-index: 1000;
 }
-.topbar h3 { font-weight: 500; font-size: 18px; }
-.topbar .date-time { font-weight: 400; opacity: 0.85; font-size: 15px; display: flex; gap: 20px; }
-.logout-btn { background: #c62828; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; color:white; }
-.logout-btn:hover { background: #b71c1c; transform: scale(1.05); }
+
+.topbar h3 { 
+    font-weight: 500; 
+    font-size: 18px; 
+}
+
+.topbar .date-time { 
+    font-weight: 400; 
+    opacity: 0.85; 
+    font-size: 15px; 
+    display: flex; 
+    gap: 20px; 
+}
+
+.logout-btn { 
+    background: #c62828; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    transition: 0.3s; 
+    color:white; 
+}
+
+.logout-btn:hover { 
+    background: #b71c1c; 
+    transform: scale(1.05); 
+}
 
 /* Main content */
-.main-content { margin-left: 220px; padding: 100px 30px 30px 30px; flex: 1; transition: margin-left 0.3s; }
+.main-content { 
+    margin-left: 220px; 
+    padding: 100px 30px 30px 30px; 
+    flex: 1; 
+    transition: margin-left 0.3s; 
+}
 
 /* Cards */
-.card-container { display:flex; gap:20px; justify-content:center; margin-bottom:30px; flex-wrap:wrap; }
-.card { width:180px; padding:20px; border-radius:15px; color:white; text-align:center; box-shadow:0 8px 20px rgba(0,0,0,0.08); transition:0.3s; }
-.card:hover { transform: translateY(-3px); }
-.card h3 { font-size:16px; margin-bottom:8px; color:white;}
-.card h2 { font-size:26px; margin-bottom:10px; color:white; }
+.card-container { 
+    display:flex; 
+    gap:20px; 
+    justify-content:center; 
+    margin-bottom:30px; 
+    flex-wrap:wrap; 
+}
+
+.card { 
+    width:180px; 
+    padding:20px; 
+    border-radius:15px; 
+    color:white; 
+    text-align:center; 
+    box-shadow:0 8px 20px rgba(0,0,0,0.08); 
+    transition:0.3s; 
+}
+
+.card:hover { 
+    transform: translateY(-3px); 
+}
+
+.card h3 { 
+    font-size:16px; 
+    margin-bottom:8px; 
+    color:white;
+}
+
+.card h2 { 
+    font-size:26px; 
+    margin-bottom:10px; 
+    color:white; 
+}
 
 /* Container/Table */
-.container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 12px 25px rgba(0,0,0,0.1); transition:0.3s; }
-.container:hover { box-shadow: 0 15px 30px rgba(0,0,0,0.12); }
-h2 { text-align: center; color: #2e7d32; margin-bottom: 25px; font-size:30px; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 10px; overflow: hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05); }
-th, td { padding: 14px; text-align: center; }
-th { background: #2e7d32; color: white; text-transform: uppercase; font-size:14px; }
-td { background: #fefefe; transition:0.3s; }
-tr:hover td { background: #f1f1f1; }
+.container { 
+    background: #fff; 
+    padding: 30px; 
+    border-radius: 15px; 
+    box-shadow: 0 12px 25px rgba(0,0,0,0.1); 
+    transition:0.3s; 
+}
+
+.container:hover { 
+    box-shadow: 0 15px 30px rgba(0,0,0,0.12); 
+}
+
+h2 { 
+    text-align: center; 
+    color: #2e7d32; 
+    margin-bottom: 25px; 
+    font-size:30px; 
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 20px; 
+    border-radius: 10px; 
+    overflow: hidden;
+    box-shadow:0 5px 15px rgba(0,0,0,0.05); 
+}
+
+th, td { 
+    padding: 14px; 
+    text-align: center; 
+}
+
+th { 
+    background: #2e7d32; 
+    color: white; 
+    text-transform: uppercase; 
+    font-size:14px; 
+}
+
+td { 
+    background: #fefefe; 
+    transition:0.3s; 
+}
+
+tr:hover td { 
+    background: #f1f1f1; 
+}
 
 /* Buttons */
-button { cursor: pointer; font-weight: 600; }
-.btn { padding: 7px 14px; border: none; border-radius: 8px; margin:2px; font-size:14px; transition:0.3s; }
-.btn-add { background: #4CAF50; color: white; }
-.btn-add:hover { background:#388E3C; transform:scale(1.05); }
-.btn-edit { background: #2196F3; color: white; }
-.btn-edit:hover { background:#1976D2; transform:scale(1.05); }
-.btn-del { background: #d32f2f; color: white; }
-.btn-del:hover { background:#b71c1c; transform:scale(1.05); }
+button { 
+    cursor: pointer; 
+    font-weight: 600; 
+}
+
+.btn { 
+    padding: 7px 14px; 
+    border: none; 
+    border-radius: 8px; 
+    margin:2px; 
+    font-size:14px; 
+    transition:0.3s; 
+}
+
+.btn-add { 
+    background: #4CAF50; 
+    color: white;
+}
+
+.btn-add:hover 
+{
+    background:#388E3C; 
+    transform:scale(1.05); 
+}
+
+.btn-edit { 
+    background: #2196F3; 
+    color: white; 
+}
+
+.btn-edit:hover {
+    background:#1976D2; 
+    transform:scale(1.05); 
+}
+
+.btn-del {
+    background: #d32f2f; 
+    color: white; 
+}
+
+.btn-del:hover { 
+    background:#b71c1c; 
+    transform:scale(1.05); 
+}
 
 /* Images */
-img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; }
+img { 
+    width: 60px; 
+    height: 60px; 
+    object-fit: cover; 
+    border-radius: 50%; 
+}
 
 /* Forms */
-.form-popup { display: none; background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 12px 35px rgba(0,0,0,0.2); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; width: 380px; }
-.overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999; }
+.form-popup { 
+    display: none; 
+    background: #fff; 
+    padding: 30px; 
+    border-radius: 15px; 
+    box-shadow: 0 12px 35px rgba(0,0,0,0.2); 
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    z-index: 1000; 
+    width: 380px; 
+}
 
-input, select { width: 100%; padding: 12px 14px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; transition:0.3s; }
-input:focus, select:focus { border-color: #2e7d32; outline: none; }
+.overlay { 
+    display: none; 
+    position: fixed; 
+    top:0; 
+    left:0; 
+    width:100%; 
+    height:100%; 
+    background: rgba(0,0,0,0.5); 
+    z-index: 999; 
+}
+
+input, select { 
+    width: 100%; 
+    padding: 12px 14px; 
+    margin-bottom: 15px; 
+    border-radius: 8px; 
+    border: 1px solid #ccc;
+    transition:0.3s; 
+}
+
+input:focus, select:focus { 
+    border-color: #2e7d32; 
+    outline: none; 
+}
 
 /* Responsive */
 @media(max-width: 900px){
@@ -231,7 +429,7 @@ input:focus, select:focus { border-color: #2e7d32; outline: none; }
 
 <div class="container">
     <h2>Employee List</h2>
-    <button class="btn btn-add" onclick="openForm('addForm')">➕ Add Employee</button>
+    <button class="btn btn-add" onclick="openForm('addForm')">➕ Add New Employee</button>
     <table>
         <tr>
             <th>ID</th>
@@ -249,7 +447,8 @@ input:focus, select:focus { border-color: #2e7d32; outline: none; }
             <td><?= htmlspecialchars($row['department']) ?></td>
             <td><?= htmlspecialchars($row['role']) ?></td>
             <td>
-                <button class="btn btn-edit" onclick="openEditForm('<?= $row['employee_id'] ?>','<?= htmlspecialchars($row['name']) ?>','<?= htmlspecialchars($row['department']) ?>','<?= htmlspecialchars($row['role']) ?>')">✏️</button>
+                <button class="btn btn-edit" onclick="openEditForm('<?= $row['employee_id'] ?>','<?= htmlspecialchars($row['name']) ?>',
+                                                                    '<?= htmlspecialchars($row['department']) ?>','<?= htmlspecialchars($row['role']) ?>')">Edit Profile</button>
                 <button class="btn btn-del" onclick="confirmDelete('<?= $row['employee_id'] ?>')">🗑</button>
             </td>
         </tr>
@@ -276,7 +475,7 @@ input:focus, select:focus { border-color: #2e7d32; outline: none; }
         </select>
         <select name="role" required>
             <option value="Employee">Employee</option>
-            <option value="GM">GM</option>
+            <option value="GM">General Manager</option>
         </select>
         <input type="password" name="password" placeholder="Set Password" required>
         <input type="file" name="photo" accept="image/*">
@@ -290,7 +489,7 @@ input:focus, select:focus { border-color: #2e7d32; outline: none; }
     <h3>Edit Employee</h3>
     <form method="POST" enctype="multipart/form-data">
         <input type="hidden" name="employee_id" id="edit_id">
-        <input type="text" name="name" id="edit_name" required>
+        <input type="text" name="name" id="edit_name" placeholder="Insert Your Name" required>
         <select name="department" id="edit_dept" required>
             <option value="Sales">Sales</option>
             <option value="Admin">Admin</option>
@@ -300,7 +499,7 @@ input:focus, select:focus { border-color: #2e7d32; outline: none; }
         </select>
         <select name="role" id="edit_role" required>
             <option value="Employee">Employee</option>
-            <option value="GM">GM</option>
+            <option value="GM">General Manager</option>
         </select>
         <input type="password" name="password" placeholder="Set New Password (optional)">
         <input type="file" name="photo" accept="image/*">
