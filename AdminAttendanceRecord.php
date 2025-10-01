@@ -63,7 +63,12 @@ while($row = $result->fetch_assoc()){
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <style>
 *   {  
-    box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Arial, sans-serif; }
+    box-sizing: border-box; 
+    margin:0; 
+    padding:0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+}
+
     body {
         display: flex; 
         min-height: 100vh; 
@@ -318,7 +323,7 @@ while($row = $result->fetch_assoc()){
         .stats { flex-direction: column; align-items: center; }
         table th, table td { padding: 10px 8px; font-size: 14px; }
     }   
-    
+
 </style>
 </head>
 <body>
