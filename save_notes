@@ -1,0 +1,16 @@
+<?php
+session_start();
+$conn = new mysqli("localhost", "root", "", "spareparts");
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    foreach ($_POST['notes'] as $emp_id => $note) {
+        $annual = $_POST['annual_leave'][$emp_id] ?? '';
+
+        $stmt = $conn->prepare("UPDATE employee SET annual_leave=?, notes=? WHERE employee_id=?");
+        $stmt->bind_param("sss", $annual, $note, $emp_id);
+        $stmt->execute();
+    }
+    echo "<script>alert('Notes saved successfully!'); window.location.href='AttendanceRateTable.php';</script>";
+}
+?>
