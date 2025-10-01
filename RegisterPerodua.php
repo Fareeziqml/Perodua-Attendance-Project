@@ -37,14 +37,63 @@ if(isset($_POST['register'])) {
     <title>Register - Perodua System</title>
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #4CAF50, #9E9E9E);
             margin: 0;
-            height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f9f9f9;
+            color: #333;
+        }
+
+        /* Header with video background */
+        header {
+            position: relative;
+            height: 35vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            text-align: center;
+            color: white;
+            overflow: hidden;
         }
+
+        header video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(1, 29, 12, 0.55);
+            z-index: -1;
+        }
+
+        header h1 {
+            font-size: 34px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        header p {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        /* Form section */
+        .form-section {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 50px 20px;
+            min-height: 65vh;
+            background: #f9f9f9;
+        }
+
         .form-box {
             background: #fff;
             border-radius: 15px;
@@ -53,15 +102,18 @@ if(isset($_POST['register'])) {
             box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
             animation: fadeIn 0.8s ease;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         h2 {
-            color: #4CAF50;
+            color: #009739;
             text-align: center;
             margin-bottom: 25px;
         }
+
         input, select {
             width: 100%;
             padding: 12px;
@@ -70,16 +122,18 @@ if(isset($_POST['register'])) {
             border-radius: 8px;
             transition: 0.3s;
         }
+
         input:focus, select:focus {
-            border-color: #4CAF50;
+            border-color: #009739;
             outline: none;
-            box-shadow: 0 0 6px rgba(76,175,80,0.5);
+            box-shadow: 0 0 6px rgba(0,151,57,0.5);
         }
+
         button {
             width: 100%;
             padding: 12px;
             margin-top: 15px;
-            background: #4CAF50;
+            background: #009739;
             color: white;
             border: none;
             border-radius: 8px;
@@ -87,24 +141,48 @@ if(isset($_POST['register'])) {
             cursor: pointer;
             transition: 0.3s;
         }
+
         button:hover {
-            background: #388E3C;
+            background: #007a2d;
         }
+
         .login-btn {
             background: #9E9E9E;
         }
         .login-btn:hover {
             background: #757575;
         }
+
         .msg { 
             text-align: center; 
             color: #d32f2f; 
             margin: 12px 0; 
             font-size: 14px;
         }
+
+        footer {
+            background: #161616ff;
+            color: white;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
+
+<header>
+    <video autoplay muted loop playsinline>
+        <source src="Video3_Perodua.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div>
+        <h1>Perodua System Registration</h1>
+        <p>Create Your Employee Account</p>
+    </div>
+</header>
+
+<div class="form-section">
     <div class="form-box">
         <h2>Register</h2>
         <form method="POST" enctype="multipart/form-data">
@@ -132,5 +210,11 @@ if(isset($_POST['register'])) {
             <button type="submit" class="login-btn">Login Here</button>
         </form>
     </div>
+</div>
+
+<footer>
+    &copy; <?php echo date("Y"); ?> Perodua Spare Part Division
+</footer>
+
 </body>
 </html>
