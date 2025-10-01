@@ -92,8 +92,19 @@ $total_employee = $emp_result->fetch_assoc()['total_emp'];
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 /* Reset & Base */
-* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Arial, sans-serif; }
-body { background: #f4f6f8; display: flex; min-height: 100vh; color:#333; }
+* { 
+    box-sizing: border-box; 
+    margin:0; 
+    padding:0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+}
+
+body { 
+    background: #f4f6f8; 
+    display: flex; 
+    min-height: 100vh; 
+    color:#333; 
+}
 
 /* Sidebar */
 .sidebar {
