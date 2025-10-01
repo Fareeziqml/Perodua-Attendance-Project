@@ -40,7 +40,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 151, 57, 0.55); /* green overlay for readability */
+            background: rgba(1, 29, 12, 0.55); /* green overlay for readability */
             z-index: -1;
         }
 
