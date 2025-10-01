@@ -14,7 +14,7 @@
         /* Header with video background */
         header {
             position: relative;
-            height: 70vh; /* video header height */
+            height: 70vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -40,7 +40,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(1, 29, 12, 0.55); /* green overlay for readability */
+            background: rgba(1, 29, 12, 0.55);
             z-index: -1;
         }
 
@@ -97,23 +97,134 @@
             box-shadow: 0 6px 18px rgba(0,0,0,0.4);
         }
 
+        /* Models Section */
+        .models-section {
+            text-align: center;
+            padding: 50px 20px;
+            background: #fff;
+        }
+
+        .models-section h2 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #222;
+        }
+
+        .models-section h2 span {
+            color: #d32f2f; /* highlight color */
+        }
+
+        .models-gallery {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .model-card {
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .model-card img {
+            width: 280px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .model-card img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        .model-card p {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        /* Contact Section */
+        .contact-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            background: #fff;
+            padding: 40px 50px;
+            box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 280px;
+            margin-right: 30px;
+            text-align: center; /* Center text + logo */
+        }
+
+        .contact-logo {
+            height: 50px;  /* smaller size */
+            margin-bottom: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .contact-info h3 {
+            color: #009739;
+            margin-bottom: 15px;
+        }
+
+        .contact-info p {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+
+        .contact-map {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .contact-map iframe {
+            width: 100%;
+            height: 250px;
+            border: none;
+            border-radius: 10px;
+        }
+
         /* Footer */
         footer {
-            background: #0f0f0fff;
+            background: #0f0f0f;
             color: white;
             text-align: center;
             padding: 15px 0;
             width: 100%;
-            box-shadow: 0 -3px 6px rgba(0,0,0,0.15);
             font-size: 14px;
             font-weight: 300;
+        }
+
+        .contact-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 25px;
+            background: white;
+            color: #0f0f0f;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .contact-btn:hover {
+            background: #009739;
+            color: white;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <!-- Video Background -->
     <video autoplay muted loop playsinline>
         <source src="Perodua_Video.mp4" type="video/mp4">
         Your browser does not support the video tag.
@@ -131,8 +242,44 @@
     <a href="LoginPerodua.php" class="enter-btn"> Enter the System</a>
 </div>
 
+<!-- Perodua Models Section -->
+<section class="models-section">
+    <h2>Top 3 <span>Perodua Models</span></h2>
+    <div class="models-gallery">
+        <div class="model-card">
+            <img src="MyviPicture.png" alt="Perodua Myvi">
+            <p>Perodua Myvi</p>
+        </div>
+        <div class="model-card">
+            <img src="Axia.png" alt="Perodua Axia">
+            <p>Perodua Axia</p>
+        </div>
+        <div class="model-card">
+            <img src="Bezza.png" alt="Perodua Bezza">
+            <p>Perodua Bezza</p>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section with Info + Map -->
+<div class="contact-section">
+    <div class="contact-info">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Perodua_Logo_%282008_-_Present%29.svg/330px-Perodua_Logo_%282008_-_Present%29.svg.png" 
+             alt="Perodua Logo" class="contact-logo">
+        <h3>📍 Perodua Sales Sdn Bhd</h3>
+        <p><b>Alamat:</b> Locked Bag 226, Sungai Choh, 48009, Rawang, Selangor</p>
+        <p><b>Jabatan:</b> Spare Part Division</p>
+        <p><b>Sektor:</b> Perdagangan Jual Borong, dan Jual Runcit, Pembaikan Kenderaan</p>
+    </div>
+    <div class="contact-map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3324.288639940672!2d101.57069607403389!3d3.368986451763893!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc42462a62c803%3A0x11e19edecbedb342!2sPerodua%20Corporate%20Building!5e1!3m2!1sen!2smy!4v1759306119378!5m2!1sen!2smy" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
+</div>
+
 <footer>
-    &copy; <?php echo date("Y"); ?> Perodua Spare Part Division
+    &copy; <?php echo date("Y"); ?> Perodua Spare Part Division <br>
+    <a href="https://perodua.com.my/contact-us" target="_blank" class="contact-btn">📞 Contact Us</a>
 </footer>
 
 </body>
