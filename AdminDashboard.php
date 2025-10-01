@@ -8,8 +8,9 @@ if(!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
     exit;
 }
 
+$employee_id   = $_SESSION['employee_id'];
 $employee_name = $_SESSION['name'];
-$role = $_SESSION['role'];
+$role          = $_SESSION['role'];
 
 /* --- Total Employees --- */
 $total_employees = $conn->query("SELECT COUNT(*) as total FROM employee")->fetch_assoc()['total'];
@@ -25,31 +26,49 @@ while ($row = $dept_res->fetch_assoc()) {
 }
 
 /* --- Employees by Status (Bar Chart for Today Only) --- */
-$today = date("Y-m-d");
-$status_sql = "SELECT status, COUNT(*) as total FROM attendance WHERE date = '$today' GROUP BY status";
+$status_sql = "SELECT status, COUNT(*) as total FROM attendance WHERE DATE(date) = CURDATE() GROUP BY status";
 $status_res = $conn->query($status_sql);
 $statuses = [];
 $status_counts = [];
 $colors = [];
+
+// Map each status to a fixed color
+$status_color_map = [
+    "MC/MIA" => "#E53935",       // Red
+    "OutStation" => "#FFEB3B",   // Yellow
+    "Available" => "#4CAF50"     // Green
+];
+
+$total_present = 0;
+$total_absent  = 0;
+
 while ($row = $status_res->fetch_assoc()) {
     $statuses[] = $row['status'];
     $status_counts[] = (int)$row['total'];
-    // Assign colors
-    if($row['status'] == "MC/MIA") $colors[] = '#E53935';        // Red
-    elseif($row['status'] == "OutStation") $colors[] = '#FFEB3B'; // Yellow
-    elseif($row['status'] == "Available") $colors[] = '#4CAF50'; // Green
-    else $colors[] = '#64B5F6'; // Default Blue
+    $colors[] = $status_color_map[$row['status']] ?? "#64B5F6"; // Default Blue
+
+    if ($row['status'] === "Available" || $row['status'] === "OutStation") {
+        $total_present += (int)$row['total'];
+    } else {
+        $total_absent += (int)$row['total'];
+    }
+}
+
+/* --- Daily Attendance Rate (%) --- */
+$daily_attendance_rate = 0;
+if ($total_employees > 0) {
+    $daily_attendance_rate = round(($total_present / $total_employees) * 100, 2);
 }
 
 $date_today = date("l, d F Y"); 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Perodua GM Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
         * { box-sizing: border-box; margin:0; padding:0; }
@@ -68,7 +87,6 @@ $date_today = date("l, d F Y");
             box-shadow: 3px 0 15px rgba(0,0,0,0.2);
         }
         .sidebar img.logo-main { display: block; margin: 0 auto 25px; width: 160px; border-radius: 20%; }
-        .sidebar img.logo-main:hover { transform: scale(1.05); }
         .sidebar h2 { text-align: center; font-size: 26px; margin-bottom: 25px; }
         .sidebar a { display: flex; align-items: center; gap: 12px; padding: 15px 25px; margin: 5px 10px; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s; }
         .sidebar a:hover { background: rgba(255,255,255,0.15); transform: translateX(10px); }
@@ -90,15 +108,14 @@ $date_today = date("l, d F Y");
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             z-index: 1000;
         }
-        .topbar h3 { font-weight: 500; font-size: 18px; }
-        .topbar .date-time { font-weight: 400; opacity: 0.85; font-size: 15px; display: flex; gap: 20px; }
+        .topbar .date-time { font-size: 14px; margin-top: 5px; }
         .logout-btn { background: #c62828; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; color:white; }
         .logout-btn:hover { background: #b71c1c; transform: scale(1.05); }
 
         /* Main content */
         .main-content {
             margin-left: 260px;
-            padding: 100px 30px 30px 30px; /* adjusted for topbar */
+            padding: 100px 30px 30px 30px;
             flex: 1;
             display: flex;
             justify-content: center;
@@ -107,13 +124,11 @@ $date_today = date("l, d F Y");
             background: #f7f8fa;
         }
 
-        /* Dashboard flex */
+        /* Dashboard grid layout */
         .dashboard {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 40px;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-start;
             width: 100%;
         }
 
@@ -124,11 +139,7 @@ $date_today = date("l, d F Y");
             padding: 40px 50px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             text-align: center;
-            transition: 0.3s;
-            flex: 1 1 300px;
-            max-width: 350px;
         }
-        .card:hover { transform: translateY(-6px); box-shadow: 0 14px 28px rgba(0,0,0,0.2); }
         .card h1 { font-size: 60px; color: #2e7d32; margin-top: 10px; }
         .card h3 { font-size: 24px; color: #1b5e20; }
 
@@ -137,14 +148,10 @@ $date_today = date("l, d F Y");
             background: #f1f8f1;
             border-radius: 15px;
             padding: 30px;
-            flex: 1 1 500px;
-            max-width: 600px;
         }
 
         @media (max-width: 1000px) {
-            .dashboard { flex-direction: column; align-items: center; gap: 30px; }
-            .chart-container { max-width: 90%; }
-            .card { max-width: 90%; }
+            .dashboard { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -156,6 +163,7 @@ $date_today = date("l, d F Y");
     <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
     <a href="Admindashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
     <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
+    <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
     <a href="AdminEmployeeList.php"><i class="fas fa-users"></i> Update Employee</a>
 </div>
 
@@ -163,7 +171,7 @@ $date_today = date("l, d F Y");
     <div>
         <h3>Welcome, <?= htmlspecialchars($employee_name) ?> (<?= $role ?>)</h3>
         <div class="date-time">
-            <span><?= $date_today ?></span>
+            <span><?= $date_today ?></span> | 
             <span id="clock">--:--:--</span>
         </div>
     </div>
@@ -178,6 +186,12 @@ $date_today = date("l, d F Y");
         <div class="card">
             <h3>Total Employees</h3>
             <h1 id="employeeCount">0</h1>
+        </div>
+
+        <!-- Daily Attendance Rate Card -->
+        <div class="card">
+            <h3>Daily Attendance Rate</h3>
+            <h1><?= $daily_attendance_rate ?>%</h1>
         </div>
 
         <!-- Pie Chart -->
@@ -225,15 +239,24 @@ $date_today = date("l, d F Y");
             labels: <?= json_encode($departments) ?>,
             datasets: [{
                 data: <?= json_encode($dept_counts) ?>,
-                backgroundColor: ['#4CAF50','#81C784','#FFB74D','#64B5F6','#BA68C8']
+                backgroundColor: ['#e26014ff','#fc0505ff','#caf702ff','#06f81bff','#d104f5ff']
             }]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: { position: 'bottom' }
+                legend: { position: 'bottom' },
+                datalabels: {
+                    color: '#0c0b0bff',
+                    font: { align: 'center', weight: 'bold', size: 14 },
+                    formatter: (value, ctx) => {
+                        let label = ctx.chart.data.labels[ctx.dataIndex];
+                        return label + ": " + value;
+                    }
+                }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 
     // Bar Chart for Employees by Status (Today)
@@ -251,10 +274,12 @@ $date_today = date("l, d F Y");
             responsive: true,
             plugins: {
                 legend: { display: false },
-                title: {
-                    display: true,
-                    text: 'Total Employees by Status (Today)',
-                    font: { size: 18 }
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#333',
+                    font: { weight: 'bold', size: 13 },
+                    formatter: (value) => value
                 }
             },
             scales: {
@@ -266,7 +291,8 @@ $date_today = date("l, d F Y");
                     title: { display: true, text: 'Status' }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 </script>
 
