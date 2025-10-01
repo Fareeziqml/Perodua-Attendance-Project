@@ -43,90 +43,184 @@ if(isset($_POST['login'])) {
     <title>Login - Perodua System</title>
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #4CAF50, #9E9E9E);
             margin: 0;
-            height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        /* Sticky header with video */
+        header {
+            position: sticky;
+            top: 0;
+            height: 30vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            text-align: center;
+            color: white;
+            overflow: hidden;
+            z-index: 10;
         }
+
+        header video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(1, 29, 12, 0.55);
+            z-index: -1;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin: 8px 0;
+            font-weight: bold;
+        }
+
+        header p {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        /* Back to Home button in header */
+        .home-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: black;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: 2px solid white;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .home-btn:hover {
+            background: white;
+            color: black;
+            border: 2px solid black;
+        }
+
+        /* Login form section */
+        .form-section {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 50px 20px;
+            min-height: 70vh;
+            background: #f9f9f9;
+        }
+
         .form-box {
             background: #fff;
             border-radius: 15px;
-            padding: 40px 30px;
-            width: 380px;
-            box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
+            padding: 30px 25px;
+            width: 350px;
+            box-shadow: 0px 6px 16px rgba(0,0,0,0.2);
             animation: fadeIn 0.8s ease;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         h2 {
-            color: #4CAF50;
+            color: #009739;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
+
         input, select {
             width: 100%;
-            padding: 12px;
-            margin: 10px 0;
+            padding: 10px;
+            margin: 8px 0;
             border: 1px solid #ccc;
             border-radius: 8px;
             transition: 0.3s;
+            font-size: 14px;
         }
+
         input:focus, select:focus {
-            border-color: #4CAF50;
+            border-color: #009739;
             outline: none;
-            box-shadow: 0 0 6px rgba(76,175,80,0.5);
+            box-shadow: 0 0 6px rgba(0,151,57,0.5);
         }
+
         button {
             width: 100%;
             padding: 12px;
-            margin-top: 15px;
-            background: #4CAF50;
+            margin-top: 12px;
+            background: #009739;
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
+            font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
         }
+
         button:hover {
-            background: #388E3C;
+            background: #007a2d;
         }
-        .register-btn {
-            background: #9E9E9E;
-        }
-        .register-btn:hover {
-            background: #757575;
-        }
-        .back-btn {
-            background: #2196F3;
-            margin-top: 10px;
-        }
-        .back-btn:hover {
-            background: #1976D2;
-        }
-        .reset-btn {
-            background: #FF9800;
-            margin-top: 10px;
-        }
-        .reset-btn:hover {
-            background: #F57C00;
-        }
+
+        .register-btn { background: #9E9E9E; }
+        .register-btn:hover { background: #757575; }
+
+        .reset-btn { background: #FF9800; }
+        .reset-btn:hover { background: #fc0909ff; }
+
         .msg { 
             text-align: center; 
             color: red; 
-            margin: 12px 0; 
+            margin: 10px 0; 
+            font-size: 14px;
+        }
+
+        footer {
+            background: #131614ff;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
             font-size: 14px;
         }
     </style>
 </head>
 <body>
+
+<header>
+    <video autoplay muted loop playsinline>
+        <source src="Video2_Perodua.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Back to Home button -->
+    <a href="HomePage.php" class="home-btn">⬅ Back to Home</a>
+
+    <div>
+        <h1>Perodua System Login</h1>
+        <p>Secure Access to Daily Attendance</p>
+    </div>
+</header>
+
+<div class="form-section">
     <div class="form-box">
-        <h2>Perodua System Login</h2>
+        <h2>Login 👨🏻‍💼</h2>
         <form method="POST">
             <input type="text" name="employee_id" placeholder="Employee ID" required>
             <input type="password" name="password" placeholder="Password" required>
@@ -146,10 +240,12 @@ if(isset($_POST['login'])) {
         <form action="ResetPassword.php" method="get">
             <button type="submit" class="reset-btn">Request Reset Password</button>
         </form>
-
-        <form action="HomePage.php" method="get">
-            <button type="submit" class="back-btn">⬅ Back to Home</button>
-        </form>
     </div>
+</div>
+
+<footer>
+    &copy; <?php echo date("Y"); ?> Perodua Spare Part Division
+</footer>
+
 </body>
 </html>
