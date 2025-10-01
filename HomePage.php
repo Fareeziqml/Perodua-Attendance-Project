@@ -99,7 +99,7 @@
 
         /* Footer */
         footer {
-            background: #009739;
+            background: #0f0f0fff;
             color: white;
             text-align: center;
             padding: 15px 0;
@@ -128,7 +128,7 @@
 
 <div class="home-content">
     <h2>Welcome to the Daily Attendance System</h2>
-    <a href="LoginPerodua.php" class="enter-btn">🚀 Enter the System</a>
+    <a href="LoginPerodua.php" class="enter-btn"> Enter the System</a>
 </div>
 
 <footer>
