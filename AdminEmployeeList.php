@@ -196,6 +196,7 @@ input:focus, select:focus { border-color: #2e7d32; outline: none; }
         <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
         <a href="Admindashboard.php"> <i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
         <a href="AdminAttendanceRecord.php"> <i class="fas fa-calendar-check"></i> Attendance Report</a>
+        <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
         <a href="AdminEmployeeList.php"> <i class="fas fa-users"></i> Update Employee</a>
 </div>
 
