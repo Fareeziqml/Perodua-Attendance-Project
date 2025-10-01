@@ -50,14 +50,15 @@ if (isset($_POST['status']) && isset($_POST['sub_status']) && isset($_POST['star
     }
 }
 
-// Handle reset all future (today and beyond)
-if (isset($_POST['reset_future'])) {
-    $delFuture = $conn->prepare("DELETE FROM attendance WHERE employee_id=? AND date >= ?");
-    $delFuture->bind_param("ss", $emp_id, $today);
-    if ($delFuture->execute()) {
-        $msg = "🔄 All applications from today and future have been reset.";
+// Handle delete single application
+if (isset($_POST['delete_id'])) {
+    $del_id = $_POST['delete_id'];
+    $del = $conn->prepare("DELETE FROM attendance WHERE id=? AND employee_id=?");
+    $del->bind_param("is", $del_id, $emp_id);
+    if ($del->execute()) {
+        $msg = "🗑️ Application deleted successfully.";
     } else {
-        $msg = "❌ Error resetting applications.";
+        $msg = "❌ Error deleting application.";
     }
 }
 
@@ -68,27 +69,10 @@ $today_stmt->bind_param("ss", $emp_id, $today);
 $today_stmt->execute();
 $todayRecord = $today_stmt->get_result();
 
-// Fetch attendance history (past only < today)
-$history_sql = "
-    SELECT * FROM attendance 
-    WHERE employee_id=? AND date < ?
-    ORDER BY 
-        CASE status
-            WHEN 'MIA/MC' THEN 1
-            WHEN 'OutStation' THEN 2
-            WHEN 'Available' THEN 3
-        END,
-        date DESC
-";
-$history = $conn->prepare($history_sql);
-$history->bind_param("ss", $emp_id, $today);
-$history->execute();
-$records = $history->get_result();
-
-// Fetch future applications (today and beyond)
+// Fetch future applications (strictly > today)
 $future_sql = "
     SELECT * FROM attendance 
-    WHERE employee_id=? AND date >= ?
+    WHERE employee_id=? AND date > ?
     ORDER BY date ASC
 ";
 $future = $conn->prepare($future_sql);
@@ -112,10 +96,10 @@ $futureRecords = $future->get_result();
         button:hover { background: #388E3C; }
         .logout-btn { background: #d32f2f; margin-left: 15px; }
         .logout-btn:hover { background: #b71c1c; }
-        .reset-btn { background: #f57c00; }
-        .reset-btn:hover { background: #ef6c00; }
         .toggle-btn { background: #1976d2; display:block; margin:15px auto; }
         .toggle-btn:hover { background: #0d47a1; }
+        .delete-btn { background: #e53935; padding: 5px 10px; border-radius: 4px; }
+        .delete-btn:hover { background: #c62828; }
         .msg { text-align: center; margin: 10px 0; color: #d32f2f; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
@@ -133,32 +117,26 @@ $futureRecords = $future->get_result();
             const subStatusSelect = document.getElementById('sub_status');
             subStatusSelect.innerHTML = '';
 
+            let options = [];
             if (status === 'MIA/MC') {
-                var options = ['AL - Annual Leave','MC - Medical Leave','EL - Emergency Leave','HL - Hospitalisation Leave','ML - Maternity Leave','1/2pm - Half Day (PM)','1/2am - Half Day (AM)','MIA - Missing In Action'];
+                options = ['AL - Annual Leave','MC - Medical Leave','EL - Emergency Leave','HL - Hospitalisation Leave','ML - Maternity Leave','1/2pm - Half Day (PM)','1/2am - Half Day (AM)','MIA - Missing In Action'];
             } else if (status === 'OutStation') {
-                var options = ['TR - Training','OS - OutStation'];
+                options = ['TR - Training','OS - OutStation'];
             } else if (status === 'Available') {
-                var options = ['-'];
-            } else {
-                var options = [];
+                options = ['In Office']; 
             }
 
             options.forEach(function(opt){
-                var option = document.createElement('option');
+                const option = document.createElement('option');
                 option.value = opt;
                 option.text = opt;
                 subStatusSelect.appendChild(option);
             });
         }
 
-        // FIX: Add toggle function
         function toggleFuture() {
             const section = document.getElementById("futureSection");
-            if (section.style.display === "none" || section.style.display === "") {
-                section.style.display = "block";
-            } else {
-                section.style.display = "none";
-            }
+            section.style.display = (section.style.display === "none" || section.style.display === "") ? "block" : "none";
         }
     </script>
 </head>
@@ -204,6 +182,7 @@ $futureRecords = $future->get_result();
                 <th>Status</th>
                 <th>Sub-Status</th>
                 <th>Note</th>
+                <th>Action</th>
             </tr>
             <?php if ($todayRecord->num_rows > 0): ?>
                 <?php while($row = $todayRecord->fetch_assoc()): ?>
@@ -218,29 +197,31 @@ $futureRecords = $future->get_result();
                         <td><?= htmlspecialchars($row['status']) ?></td>
                         <td><?= htmlspecialchars($row['sub_status']) ?></td>
                         <td><?= htmlspecialchars($row['note']) ?></td>
+                        <td>
+                            <form method="POST" onsubmit="return confirm('Delete this application?');">
+                                <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             <?php else: ?>
-                <tr><td colspan="4">❌ No attendance submitted for today.</td></tr>
+                <tr><td colspan="5">❌ No attendance submitted for today.</td></tr>
             <?php endif; ?>
         </table>
 
         <!-- Show/Hide Button -->
         <button type="button" class="toggle-btn" onclick="toggleFuture()">Show/Hide Future Applications</button>
 
-        <!-- Reset all History applications -->
-        <form method="POST" style="text-align:center; margin-top:15px;">
-            <button type="submit" name="reset_future" class="reset-btn" onclick="return confirm('Delete ALL future applications (including today)?')">Reset All Applications</button>
-        </form>
-
         <div id="futureSection">
-            <h3>Future Applications (Today and Beyond)</h3>
+            <h3>Future Applications (Tomorrow and Beyond)</h3>
             <table>
                 <tr>
                     <th>Date</th>
                     <th>Status</th>
                     <th>Sub-Status</th>
                     <th>Note</th>
+                    <th>Action</th>
                 </tr>
                 <?php if ($futureRecords->num_rows > 0): ?>
                     <?php while($row = $futureRecords->fetch_assoc()): ?>
@@ -255,10 +236,16 @@ $futureRecords = $future->get_result();
                             <td><?= htmlspecialchars($row['status']) ?></td>
                             <td><?= htmlspecialchars($row['sub_status']) ?></td>
                             <td><?= htmlspecialchars($row['note']) ?></td>
+                            <td>
+                                <form method="POST" onsubmit="return confirm('Delete this application?');">
+                                    <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
-                    <tr><td colspan="4">No future applications found.</td></tr>
+                    <tr><td colspan="5">No future applications found.</td></tr>
                 <?php endif; ?>
             </table>
         </div>
