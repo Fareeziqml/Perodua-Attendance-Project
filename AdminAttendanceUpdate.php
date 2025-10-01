@@ -100,34 +100,202 @@ $futureRecords = $future->get_result();
     <title>GM Attendance - Perodua</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background: #f5f5f5; display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: linear-gradient(180deg, #1b5e20, #388e3c); color: white; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; box-shadow: 3px 0 15px rgba(0,0,0,0.2); }
-        .sidebar img.logo-main { display: block; margin: 0 auto 25px; width: 160px; border-radius: 20%; }
-        .sidebar h2 { text-align: center; font-size: 26px; margin-bottom: 25px; color:white;}
-        .sidebar a { display: flex; align-items: center; gap: 12px; padding: 15px 25px; margin: 5px 10px; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s; }
-        .sidebar a:hover { background: rgba(255,255,255,0.15); transform: translateX(10px); }
-        .sidebar a i { font-size: 18px; }
-        .topbar { position: fixed; top: 0; left: 260px; right: 0; height: 70px; background: #2e7d32; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; }
-        .topbar h3 { font-weight: 500; font-size: 18px; }
-        .topbar .date-time { font-weight: 400; opacity: 0.85; font-size: 15px; display: flex; gap: 20px; }
-        .logout-btn { background: #c62828; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .logout-btn:hover { background: #b71c1c; transform: scale(1.05); }
-        .main-content { margin-left: 260px; padding: 100px 30px 30px 30px; width: 100%; }
-        h2 { color: #2e7d32; text-align: center; margin-bottom: 20px; }
-        form { margin: 20px 0; text-align: center; }
-        select, input[type=text], input[type=date] { padding: 10px; margin: 8px; border: 1px solid #ccc; border-radius: 6px; min-width: 200px; }
-        button { background: #4CAF50; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-weight: 500; }
-        button:hover { background: #388E3C; }
-        .delete-btn { background: #d32f2f; }
-        .delete-btn:hover { background: #b71c1c; }
-        .msg { text-align: center; margin: 10px 0; color: #d32f2f; font-weight: 500; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow:0 5px 15px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background: #2e7d32; color: white; text-transform: uppercase; }
-        .status-mia { background-color: #ffcccc; font-weight: bold; }
-        .status-outstation { background-color: #fff4cc; font-weight: bold; }
-        .status-available { background-color: #ccffcc; font-weight: bold; }
+        * { 
+            box-sizing: border-box; 
+            margin:0; 
+            padding:0; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+        }
+
+        body { 
+            background: #f5f5f5; 
+            display: flex; 
+            min-height: 100vh; 
+        }
+
+        .sidebar {
+            width: 260px; 
+            background: linear-gradient(180deg, #1b5e20, #388e3c); 
+            color: white; 
+            position: fixed; 
+            top: 0; 
+            bottom: 0; 
+            left: 0; 
+            padding-top: 30px; 
+            box-shadow: 3px 0 15px rgba(0,0,0,0.2); 
+        }
+        
+        .sidebar img.logo-main { 
+            display: block; 
+            margin: 0 auto 25px; 
+            width: 160px; 
+            border-radius: 20%; 
+        }
+
+        .sidebar h2 {
+            text-align: center; 
+            font-size: 26px; 
+            margin-bottom: 25px; 
+            color:white;
+        }
+
+        .sidebar a { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 15px 25px; 
+            margin: 5px 10px; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            font-weight: 500; 
+            transition: all 0.3s; 
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.15); 
+            transform: translateX(10px); 
+        }
+
+        .sidebar a i { 
+            font-size: 18px;
+         }
+
+        .topbar { 
+            position: fixed; 
+            top: 0; 
+            left: 260px; 
+            right: 0; 
+            height: 70px; 
+            background: #2e7d32; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 30px; 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+            z-index: 1000; 
+        }
+
+        .topbar h3 { 
+            font-weight: 500; 
+            font-size: 18px; 
+        }
+
+        .topbar .date-time { 
+            font-weight: 400; 
+            opacity: 0.85; 
+            font-size: 15px; 
+            display: flex; 
+            gap: 20px; 
+        }
+
+        .logout-btn { 
+            background: #c62828; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.3s; 
+        }
+
+        .logout-btn:hover {
+            background: #b71c1c; 
+            transform: scale(1.05); 
+        }
+
+        .main-content { 
+            margin-left: 260px; 
+            padding: 100px 30px 30px 30px; 
+            width: 100%; 
+        }
+        
+        h2 { 
+            color: #2e7d32; 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+
+        form { 
+            margin: 20px 0; 
+            text-align: center; 
+        }
+
+        select, input[type=text], input[type=date] { 
+            padding: 10px;
+            margin: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            min-width: 200px; 
+        }
+
+        button {
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            font-weight: 500; 
+        }
+
+        button:hover {
+            background: #388E3C; 
+            }
+
+        .delete-btn {
+            background: #d32f2f; 
+        }
+
+        .delete-btn:hover { 
+            background: #b71c1c; 
+        }
+
+        .msg { 
+            text-align: center; 
+            margin: 10px 0; 
+            color: #d32f2f; 
+            font-weight: 500; 
+        }
+
+        table {
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            box-shadow:0 5px 15px rgba(0,0,0,0.05); 
+            border-radius: 8px; 
+            overflow: hidden; 
+        }
+        
+        th, td {
+             border: 1px solid #ddd; 
+             padding: 12px; 
+             text-align: center; 
+            }
+
+        th { 
+            background: #2e7d32; 
+            color: white; 
+            text-transform: uppercase; 
+        }
+
+        .status-mia {
+            background-color: #ffcccc; 
+            font-weight: bold; 
+        }
+
+        .status-outstation { 
+            background-color: #fff4cc; 
+            font-weight: bold; 
+        }
+
+        .status-available { 
+            background-color: #ccffcc; 
+            font-weight: bold; 
+        }
+
         #futureSection { display:none; }
     </style>
     <script>
@@ -137,7 +305,8 @@ $futureRecords = $future->get_result();
             subStatusSelect.innerHTML = '';
             let options = [];
             if (status === 'MIA/MC') {
-                options = ['AL - Annual Leave','MC - Medical Leave','EL - Emergency Leave','HL - Hospitalisation Leave','ML - Maternity Leave','1/2pm - Half Day (PM)','1/2am - Half Day (AM)','MIA - Missing In Action'];
+                options = ['AL - Annual Leave','MC - Medical Leave','EL - Emergency Leave','HL - Hospitalisation Leave',
+                            'ML - Maternity Leave','1/2pm - Half Day (PM)','1/2am - Half Day (AM)','MIA - Missing In Action'];
             } else if (status === 'OutStation') {
                 options = ['TR - Training','OS - OutStation'];
             } else if (status === 'Available') {
