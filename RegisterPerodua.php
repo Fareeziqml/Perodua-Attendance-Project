@@ -184,7 +184,7 @@ if(isset($_POST['register'])) {
 
 <div class="form-section">
     <div class="form-box">
-        <h2>Register</h2>
+        <h2>Register 👨🏻‍💼</h2>
         <form method="POST" enctype="multipart/form-data">
             <input type="text" name="employee_id" placeholder="Employee ID" required>
             <input type="password" name="password" placeholder="Password" required>
