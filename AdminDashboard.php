@@ -86,11 +86,41 @@ $date_today = date("l, d F Y");
             padding-top: 30px;
             box-shadow: 3px 0 15px rgba(0,0,0,0.2);
         }
-        .sidebar img.logo-main { display: block; margin: 0 auto 25px; width: 160px; border-radius: 20%; }
-        .sidebar h2 { text-align: center; font-size: 26px; margin-bottom: 25px; }
-        .sidebar a { display: flex; align-items: center; gap: 12px; padding: 15px 25px; margin: 5px 10px; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s; }
-        .sidebar a:hover { background: rgba(255,255,255,0.15); transform: translateX(10px); }
-        .sidebar a i { font-size: 18px; }
+
+        .sidebar img.logo-main { 
+            display: block; 
+            margin: 0 auto 25px; 
+            width: 160px; 
+            border-radius: 20%; 
+        }
+
+        .sidebar h2 {
+            text-align: center; 
+            font-size: 26px; 
+            margin-bottom: 25px; 
+        }
+
+        .sidebar a {
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 15px 25px; 
+            margin: 5px 10px; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            font-weight: 500;
+            transition: all 0.3s; 
+        }
+
+        .sidebar a:hover { 
+            background: rgba(255,255,255,0.15); 
+            transform: translateX(10px); 
+        }
+
+        .sidebar a i {
+            font-size: 18px; 
+        }
 
         /* Topbar */
         .topbar {
@@ -108,9 +138,27 @@ $date_today = date("l, d F Y");
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             z-index: 1000;
         }
-        .topbar .date-time { font-size: 14px; margin-top: 5px; }
-        .logout-btn { background: #c62828; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; color:white; }
-        .logout-btn:hover { background: #b71c1c; transform: scale(1.05); }
+
+        .topbar .date-time { 
+            font-size: 14px; 
+            margin-top: 5px; 
+        }
+
+        .logout-btn { 
+            background: #c62828; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.3s; 
+            color:white; 
+        }
+
+        .logout-btn:hover { 
+            background: #b71c1c;
+            transform: scale(1.05); 
+        }
 
         /* Main content */
         .main-content {
