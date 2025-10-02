@@ -86,49 +86,76 @@ $futureRecords = $future->get_result();
     <meta charset="UTF-8">
     <title>My Attendance - Perodua</title>
     <style>
-        /* ===== Reset & Fonts ===== */
         body, html { margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
-        a { color: inherit; text-decoration: none; }
-
-        /* ===== Container ===== */
         .container { max-width: 1100px; margin: 40px auto; padding: 0 15px; }
         .card { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); margin-bottom: 30px; }
+        h2 { text-align: center; margin-bottom: 20px; font-size: 28px; }
 
-        h2 { color: #111; text-align: center; margin-bottom: 20px; font-size: 28px; }
-
-        /* ===== Forms ===== */
-        form { margin: 20px 0; text-align: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-        select, input[type=text], input[type=date] { padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: #fafafa; color: #111; min-width: 160px; }
+        form { margin: 20px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        select, input[type=text], input[type=date] { padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: #fafafa; min-width: 160px; }
         input[type=text] { width: 200px; }
         button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
 
-        /* Button colors */
-        button[type="submit"] { background: #4CAF50; color: #fff; }
-        button[type="submit"]:hover { background: #45a049; }
+        /* Submit button */
+        button[type="submit"]:not(.logout-btn):not(.delete-btn) { background: #4CAF50; color: #000; }
+        button[type="submit"]:not(.logout-btn):not(.delete-btn):hover { background: #45a049; }
 
-        .logout-btn { background: #f44336; color: #fff; }
-        .logout-btn:hover { background: #d32f2f; }
-        .toggle-btn { background: #2196F3; color: #fff; width: 220px; }
-        .toggle-btn:hover { background: #1976d2; }
-        .delete-btn { background: #ff1100ff; color: #fff; }
-        .delete-btn:hover { background: #fb8c00; }  
+        /* Logout button */
+        .logout-btn { background: #000; color: #fff; }
+        .logout-btn:hover { background: #333; }
 
-        /* ===== Messages ===== */
+        /* Delete button */
+        .delete-btn { background: #e60000; color: #fff; }
+        .delete-btn:hover { background: #b30000; }
+
+        /* Toggle button */
+        .toggle-btn { background: #007BFF; color: #fff; width: 220px; }
+        .toggle-btn:hover { background: #0056b3; }
+
         .msg { text-align:center; margin: 10px 0; color: #d32f2f; font-weight: bold; }
-
-        /* ===== Tables ===== */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px 10px; text-align: center; border: 1px solid #ddd; }
-        th { background: #f7f7f7; font-size: 16px; }
+        th { background: #0e0d0dff; color:white;}
         tr:nth-child(even) { background: #f9f9f9; }
         tr:hover { background: #f1f1f1; }
 
-        /* Status highlights */
-        .status-mia { background-color: #fd1212ff; font-weight: bold; color: #b71c1c; }
-        .status-outstation { background-color: #fadb6dff; font-weight: bold; color: #ff6f00; }
-        .status-available { background-color: #b7fcb7ff; font-weight: bold; color: #2e7d32; }
+        /* Status row colors */
+        .status-mia { background-color: #fd1212 !important; color: #fff; }
+        .status-outstation { background-color: #fadb6d !important; color: #000; }
+        .status-available { background-color: #b7fcb7 !important; color: #000; }
 
-        /* Responsive */
+        /* Modal styles with blur + fade-in */
+        .modal { 
+            display:none; 
+            position:fixed; 
+            z-index:1000; 
+            left:0; 
+            top:0; 
+            width:100%; 
+            height:100%; 
+            background:rgba(0,0,0,0.4); 
+            backdrop-filter: blur(5px); 
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .modal-content { 
+            background:#fff; 
+            margin:15% auto; 
+            padding:20px; 
+            border-radius:10px; 
+            width:350px; 
+            text-align:center; 
+            animation: slideDown 0.3s ease;
+        }
+        .modal h3 { margin-bottom:15px; }
+        .modal-buttons { display:flex; justify-content:center; gap:15px; }
+        .confirm-btn { background:#e60000; color:#fff; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; }
+        .cancel-btn { background:#777; color:#fff; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; }
+        .confirm-btn:hover { background:#b30000; }
+        .cancel-btn:hover { background:#555; }
+
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes slideDown { from { transform: translateY(-30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
         @media(max-width: 900px) {
             form { flex-direction: column; gap: 10px; }
             input[type=text], select { width: 90%; }
@@ -139,7 +166,6 @@ $futureRecords = $future->get_result();
             const status = document.getElementById('status').value;
             const subStatusSelect = document.getElementById('sub_status');
             subStatusSelect.innerHTML = '';
-
             let options = [];
             if (status === 'MIA/MC') {
                 options = ['AL - Annual Leave','MC - Medical Leave','EL - Emergency Leave','HL - Hospitalisation Leave','ML - Maternity Leave','1/2pm - Half Day (PM)','1/2am - Half Day (AM)','MIA - Missing In Action'];
@@ -148,18 +174,27 @@ $futureRecords = $future->get_result();
             } else if (status === 'Available') {
                 options = ['In Office']; 
             }
-
-            options.forEach(function(opt){
+            options.forEach(opt => {
                 const option = document.createElement('option');
                 option.value = opt;
                 option.text = opt;
                 subStatusSelect.appendChild(option);
             });
         }
-
         function toggleFuture() {
             const section = document.getElementById("futureSection");
             section.style.display = (section.style.display === "none" || section.style.display === "") ? "block" : "none";
+        }
+        function showLogoutModal() { document.getElementById("logoutModal").style.display = "block"; }
+        function closeLogoutModal() { document.getElementById("logoutModal").style.display = "none"; }
+
+        // Show Delete Modal
+        function showDeleteModal(id) {
+            document.getElementById("deleteModal").style.display = "block";
+            document.getElementById("delete_id_input").value = id;
+        }
+        function closeDeleteModal() {
+            document.getElementById("deleteModal").style.display = "none";
         }
     </script>
 </head>
@@ -169,9 +204,36 @@ $futureRecords = $future->get_result();
             <h2>My Attendance - Staff ID: <?= htmlspecialchars($emp_id) ?></h2>
 
             <!-- Logout -->
-            <form method="POST" style="justify-content:flex-end;">
-                <button type="submit" name="logout" class="logout-btn">Logout</button>
-            </form>
+            <button type="button" class="logout-btn" onclick="showLogoutModal()">Logout</button>
+
+            <!-- Logout Modal -->
+            <div id="logoutModal" class="modal">
+                <div class="modal-content">
+                    <h3>Confirm Logout</h3>
+                    <p>Are you sure you want to log out?</p>
+                    <div class="modal-buttons">
+                        <form method="POST">
+                            <button type="submit" name="logout" class="confirm-btn">Yes, Logout</button>
+                        </form>
+                        <button type="button" class="cancel-btn" onclick="closeLogoutModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Modal -->
+            <div id="deleteModal" class="modal">
+                <div class="modal-content">
+                    <h3>Confirm Delete</h3>
+                    <p>Are you sure you want to delete this application?</p>
+                    <div class="modal-buttons">
+                        <form method="POST">
+                            <input type="hidden" name="delete_id" id="delete_id_input">
+                            <button type="submit" class="confirm-btn">Yes, Delete</button>
+                        </form>
+                        <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Attendance Submission -->
             <form method="POST">
@@ -181,15 +243,12 @@ $futureRecords = $future->get_result();
                     <option value="OutStation">OutStation</option>
                     <option value="Available">Available</option>
                 </select>
-
                 <select name="sub_status" id="sub_status" required>
                     <option value="">--Select Sub-Status--</option>
                 </select>
-
                 <input type="text" name="note" placeholder="Add Note (optional)">
                 <input type="date" name="start_date" required>
                 <input type="date" name="end_date" required>
-
                 <button type="submit">Submit</button>
             </form>
 
@@ -200,13 +259,7 @@ $futureRecords = $future->get_result();
         <div class="card">
             <h3>Today Attendance</h3>
             <table>
-                <tr>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Sub-Status</th>
-                    <th>Note</th>
-                    <th>Action</th>
-                </tr>
+                <tr><th>Date</th><th>Status</th><th>Sub-Status</th><th>Note</th><th>Action</th></tr>
                 <?php if ($todayRecord->num_rows > 0): ?>
                     <?php while($row = $todayRecord->fetch_assoc()): ?>
                         <?php
@@ -221,10 +274,7 @@ $futureRecords = $future->get_result();
                             <td><?= htmlspecialchars($row['sub_status']) ?></td>
                             <td><?= htmlspecialchars($row['note']) ?></td>
                             <td>
-                                <form method="POST" onsubmit="return confirm('Delete this application?');">
-                                    <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
-                                    <button type="submit" class="delete-btn">Delete</button>
-                                </form>
+                                <button type="button" class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -240,13 +290,7 @@ $futureRecords = $future->get_result();
             <div id="futureSection" style="display:none;">
                 <h3>Future Applications</h3>
                 <table>
-                    <tr>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Sub-Status</th>
-                        <th>Note</th>
-                        <th>Action</th>
-                    </tr>
+                    <tr><th>Date</th><th>Status</th><th>Sub-Status</th><th>Note</th><th>Action</th></tr>
                     <?php if ($futureRecords->num_rows > 0): ?>
                         <?php while($row = $futureRecords->fetch_assoc()): ?>
                             <?php
@@ -261,10 +305,7 @@ $futureRecords = $future->get_result();
                                 <td><?= htmlspecialchars($row['sub_status']) ?></td>
                                 <td><?= htmlspecialchars($row['note']) ?></td>
                                 <td>
-                                    <form method="POST" onsubmit="return confirm('Delete this application?');">
-                                        <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
-                                        <button type="submit" class="delete-btn">Delete</button>
-                                    </form>
+                                    <button type="button" class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
