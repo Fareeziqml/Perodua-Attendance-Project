@@ -33,7 +33,6 @@ if (isset($_POST['status']) && isset($_POST['sub_status']) && isset($_POST['star
     } else {
         $cur_date = $start_date;
         while ($cur_date <= $end_date) {
-            // check duplicate for each day
             $check = $conn->prepare("SELECT * FROM attendance WHERE employee_id=? AND date=?");
             $check->bind_param("ss", $emp_id, $cur_date);
             $check->execute();
@@ -62,14 +61,14 @@ if (isset($_POST['delete_id'])) {
     }
 }
 
-// Fetch today attendance (ONLY today)
+// Fetch today attendance
 $today_sql = "SELECT * FROM attendance WHERE employee_id=? AND date = ?";
 $today_stmt = $conn->prepare($today_sql);
 $today_stmt->bind_param("ss", $emp_id, $today);
 $today_stmt->execute();
 $todayRecord = $today_stmt->get_result();
 
-// Fetch future applications (strictly > today)
+// Fetch future applications
 $future_sql = "
     SELECT * FROM attendance 
     WHERE employee_id=? AND date > ?
@@ -87,29 +86,53 @@ $futureRecords = $future->get_result();
     <meta charset="UTF-8">
     <title>My Attendance - Perodua</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f5f5f5; }
-        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        h2 { color: #4CAF50; text-align: center; }
-        form { margin: 20px 0; text-align: center; }
-        select, input[type=text], input[type=date] { padding: 8px; margin: 8px; border: 1px solid #ccc; border-radius: 6px; }
-        button { background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #388E3C; }
-        .logout-btn { background: #d32f2f; margin-left: 15px; }
-        .logout-btn:hover { background: #b71c1c; }
-        .toggle-btn { background: #1976d2; display:block; margin:15px auto; }
-        .toggle-btn:hover { background: #0d47a1; }
-        .delete-btn { background: #e53935; padding: 5px 10px; border-radius: 4px; }
-        .delete-btn:hover { background: #c62828; }
-        .msg { text-align: center; margin: 10px 0; color: #d32f2f; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background: #4CAF50; color: white; }
+        /* ===== Reset & Fonts ===== */
+        body, html { margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        a { color: inherit; text-decoration: none; }
 
-        /* Highlight colors */
-        .status-mia { background-color: #ffcccc; font-weight: bold; }
-        .status-outstation { background-color: #fff4cc; font-weight: bold; }
-        .status-available { background-color: #ccffcc; font-weight: bold; }
-        #futureSection { display: none; }
+        /* ===== Container ===== */
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 15px; }
+        .card { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); margin-bottom: 30px; }
+
+        h2 { color: #111; text-align: center; margin-bottom: 20px; font-size: 28px; }
+
+        /* ===== Forms ===== */
+        form { margin: 20px 0; text-align: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        select, input[type=text], input[type=date] { padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: #fafafa; color: #111; min-width: 160px; }
+        input[type=text] { width: 200px; }
+        button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+
+        /* Button colors */
+        button[type="submit"] { background: #4CAF50; color: #fff; }
+        button[type="submit"]:hover { background: #45a049; }
+
+        .logout-btn { background: #f44336; color: #fff; }
+        .logout-btn:hover { background: #d32f2f; }
+        .toggle-btn { background: #2196F3; color: #fff; width: 220px; }
+        .toggle-btn:hover { background: #1976d2; }
+        .delete-btn { background: #ff1100ff; color: #fff; }
+        .delete-btn:hover { background: #fb8c00; }  
+
+        /* ===== Messages ===== */
+        .msg { text-align:center; margin: 10px 0; color: #d32f2f; font-weight: bold; }
+
+        /* ===== Tables ===== */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 10px; text-align: center; border: 1px solid #ddd; }
+        th { background: #f7f7f7; font-size: 16px; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:hover { background: #f1f1f1; }
+
+        /* Status highlights */
+        .status-mia { background-color: #fd1212ff; font-weight: bold; color: #b71c1c; }
+        .status-outstation { background-color: #fadb6dff; font-weight: bold; color: #ff6f00; }
+        .status-available { background-color: #b7fcb7ff; font-weight: bold; color: #2e7d32; }
+
+        /* Responsive */
+        @media(max-width: 900px) {
+            form { flex-direction: column; gap: 10px; }
+            input[type=text], select { width: 90%; }
+        }
     </style>
     <script>
         function updateSubStatusOptions() {
@@ -142,79 +165,40 @@ $futureRecords = $future->get_result();
 </head>
 <body>
     <div class="container">
-        <h2>My Attendance - Staff ID: <?= htmlspecialchars($emp_id) ?></h2>
+        <div class="card">
+            <h2>My Attendance - Staff ID: <?= htmlspecialchars($emp_id) ?></h2>
 
-        <!-- Logout button -->
-        <form method="POST" style="text-align:right;">
-            <button type="submit" name="logout" class="logout-btn">Logout</button>
-        </form>
+            <!-- Logout -->
+            <form method="POST" style="justify-content:flex-end;">
+                <button type="submit" name="logout" class="logout-btn">Logout</button>
+            </form>
 
-        <!-- Attendance submission -->
-        <form method="POST">
-            <label>Status:</label>
-            <select name="status" id="status" onchange="updateSubStatusOptions()" required>
-                <option value="">--Select--</option>
-                <option value="MIA/MC">MIA/MC</option>
-                <option value="OutStation">OutStation</option>
-                <option value="Available">Available</option>
-            </select>
+            <!-- Attendance Submission -->
+            <form method="POST">
+                <select name="status" id="status" onchange="updateSubStatusOptions()" required>
+                    <option value="">--Select Status--</option>
+                    <option value="MIA/MC">MIA/MC</option>
+                    <option value="OutStation">OutStation</option>
+                    <option value="Available">Available</option>
+                </select>
 
-            <label>Sub-Status:</label>
-            <select name="sub_status" id="sub_status" required>
-                <option value="">--Select--</option>
-            </select>
+                <select name="sub_status" id="sub_status" required>
+                    <option value="">--Select Sub-Status--</option>
+                </select>
 
-            <input type="text" name="note" placeholder="Add Note (optional)">
-            <br>
-            <label>From:</label>
-            <input type="date" name="start_date" required>
-            <label>To:</label>
-            <input type="date" name="end_date" required>
-            <button type="submit">Submit</button>
-        </form>
+                <input type="text" name="note" placeholder="Add Note (optional)">
+                <input type="date" name="start_date" required>
+                <input type="date" name="end_date" required>
 
-        <div class="msg"><?= $msg ?></div>
+                <button type="submit">Submit</button>
+            </form>
 
-        <h3>Today Attendance Update</h3>
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Sub-Status</th>
-                <th>Note</th>
-                <th>Action</th>
-            </tr>
-            <?php if ($todayRecord->num_rows > 0): ?>
-                <?php while($row = $todayRecord->fetch_assoc()): ?>
-                    <?php
-                        $statusClass = "";
-                        if ($row['status'] == "MIA/MC") $statusClass = "status-mia";
-                        elseif ($row['status'] == "OutStation") $statusClass = "status-outstation";
-                        elseif ($row['status'] == "Available") $statusClass = "status-available";
-                    ?>
-                    <tr class="<?= $statusClass ?>">
-                        <td><?= htmlspecialchars($row['date']) ?></td>
-                        <td><?= htmlspecialchars($row['status']) ?></td>
-                        <td><?= htmlspecialchars($row['sub_status']) ?></td>
-                        <td><?= htmlspecialchars($row['note']) ?></td>
-                        <td>
-                            <form method="POST" onsubmit="return confirm('Delete this application?');">
-                                <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr><td colspan="5">❌ No attendance submitted for today.</td></tr>
-            <?php endif; ?>
-        </table>
+            <div class="msg"><?= $msg ?></div>
+        </div>
 
-        <!-- Show/Hide Button -->
-        <button type="button" class="toggle-btn" onclick="toggleFuture()">Show/Hide Future Applications</button>
-
-        <div id="futureSection">
-            <h3>Future Applications (Tomorrow and Beyond)</h3>
+        <!-- Today's Attendance -->
+        <div class="card">
+            <h3>Today Attendance</h3>
             <table>
                 <tr>
                     <th>Date</th>
@@ -223,8 +207,8 @@ $futureRecords = $future->get_result();
                     <th>Note</th>
                     <th>Action</th>
                 </tr>
-                <?php if ($futureRecords->num_rows > 0): ?>
-                    <?php while($row = $futureRecords->fetch_assoc()): ?>
+                <?php if ($todayRecord->num_rows > 0): ?>
+                    <?php while($row = $todayRecord->fetch_assoc()): ?>
                         <?php
                             $statusClass = "";
                             if ($row['status'] == "MIA/MC") $statusClass = "status-mia";
@@ -245,9 +229,50 @@ $futureRecords = $future->get_result();
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
-                    <tr><td colspan="5">No future applications found.</td></tr>
+                    <tr><td colspan="5">❌ No attendance submitted for today.</td></tr>
                 <?php endif; ?>
             </table>
+        </div>
+
+        <!-- Future Applications -->
+        <div class="card">
+            <button type="button" class="toggle-btn" onclick="toggleFuture()">Show/Hide Future Applications</button>
+            <div id="futureSection" style="display:none;">
+                <h3>Future Applications</h3>
+                <table>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Sub-Status</th>
+                        <th>Note</th>
+                        <th>Action</th>
+                    </tr>
+                    <?php if ($futureRecords->num_rows > 0): ?>
+                        <?php while($row = $futureRecords->fetch_assoc()): ?>
+                            <?php
+                                $statusClass = "";
+                                if ($row['status'] == "MIA/MC") $statusClass = "status-mia";
+                                elseif ($row['status'] == "OutStation") $statusClass = "status-outstation";
+                                elseif ($row['status'] == "Available") $statusClass = "status-available";
+                            ?>
+                            <tr class="<?= $statusClass ?>">
+                                <td><?= htmlspecialchars($row['date']) ?></td>
+                                <td><?= htmlspecialchars($row['status']) ?></td>
+                                <td><?= htmlspecialchars($row['sub_status']) ?></td>
+                                <td><?= htmlspecialchars($row['note']) ?></td>
+                                <td>
+                                    <form method="POST" onsubmit="return confirm('Delete this application?');">
+                                        <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
+                                        <button type="submit" class="delete-btn">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="5">No future applications found.</td></tr>
+                    <?php endif; ?>
+                </table>
+            </div>
         </div>
     </div>
 </body>
