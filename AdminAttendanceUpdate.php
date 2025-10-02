@@ -92,7 +92,6 @@ $futureRecords = $future->get_result();
         background:#111; color:white; padding:30px 0;
         box-shadow:3px 0 15px rgba(0,0,0,0.2);
     }
-    .sidebar img.logo-main { width: 140px; display:block; margin:0 auto 20px; border-radius:20%; }
     .sidebar h2 { text-align:center; margin-bottom:25px; font-size:26px; color:white; }
     .sidebar a { display:flex; align-items:center; gap:12px; padding:12px 25px; margin:5px 15px; border-radius:8px; font-weight:500; transition:0.3s; color:white; }
     .sidebar a:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
@@ -105,8 +104,8 @@ $futureRecords = $future->get_result();
     }
     .topbar h3 { font-weight:500; }
     .topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
-    .logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
-    .logout-btn:hover { background:#e0e0e0; }
+    .logout-btn { background:#fff; color:#000; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
+    .logout-btn:hover { background:#333; }
 
     /* Main Content */
     .main-content { margin-left:250px; padding:100px 30px 30px 30px; }
@@ -122,11 +121,11 @@ $futureRecords = $future->get_result();
     select, input[type=text], input[type=date] { padding:10px 12px; border:1px solid #ccc; border-radius:8px; min-width:160px; }
     button { padding:8px 18px; border:none; border-radius:8px; cursor:pointer; font-weight:500; transition:0.3s; }
 
-    button[type="submit"] { background:#4CAF50; color:white; }
-    button[type="submit"]:hover { background:#388E3C; }
+    button[type="submit"]:not(.delete-btn):not(.logout-btn) { background:#4CAF50; color:#000; }
+    button[type="submit"]:not(.delete-btn):not(.logout-btn):hover { background:#45a049; }
 
-    .delete-btn { background:#e53935; color:white; border-radius:8px; }
-    .delete-btn:hover { background:#b71c1c; }
+    .delete-btn { background:#e60000; color:white; border-radius:8px; }
+    .delete-btn:hover { background:#b30000; }
 
     .toggle-btn { background:#2196F3; color:white; margin:10px 0; border-radius:8px; }
     .toggle-btn:hover { background:#1976d2; }
@@ -142,11 +141,25 @@ $futureRecords = $future->get_result();
     .badge-available { background:#43a047; }
 
     /* Modal */
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:2000; }
-    .modal-content { background:#fff; padding:25px; border-radius:12px; width:320px; text-align:center; }
+    .modal { 
+        display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+        background:rgba(0,0,0,0.4); 
+        backdrop-filter: blur(6px); /* NEW blur effect */
+        justify-content:center; align-items:center; z-index:2000;
+        opacity:0; transition: opacity 0.3s ease; /* NEW fade */
+    }
+    .modal.show { opacity:1; } /* active state */
+    .modal-content { 
+        background:#fff; padding:25px; border-radius:12px; width:320px; text-align:center; 
+        transform: translateY(-30px); opacity:0;
+        animation: fadeSlideIn 0.4s forwards; /* NEW animation */
+    }
+    @keyframes fadeSlideIn {
+        to { transform: translateY(0); opacity:1; }
+    }
     .modal-content h3 { margin-bottom:20px; color:#111; }
     .modal-buttons { display:flex; justify-content:space-around; }
-    .modal-buttons button { width:100px; }
+    .modal-buttons button { width:100px; border-radius:8px; }
 
     /* Responsive */
     @media(max-width:900px) {
@@ -183,18 +196,24 @@ setInterval(updateClock,1000);
 // Modal functions
 function showDeleteModal(id) {
     deleteId = id;
-    document.getElementById('deleteModal').style.display = 'flex';
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'flex';
+    setTimeout(()=> modal.classList.add('show'), 10);
 }
 function confirmDelete() {
     document.getElementById('delete_id_input').value = deleteId;
     document.getElementById('deleteForm').submit();
 }
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+    setTimeout(()=> modal.style.display='none', 300);
 }
 
 function showLogoutModal() {
-    document.getElementById('logoutModal').style.display = 'flex';
+    const modal = document.getElementById('logoutModal');
+    modal.style.display = 'flex';
+    setTimeout(()=> modal.classList.add('show'), 10);
 }
 function confirmLogout() {
     document.getElementById('logoutForm').submit();
@@ -204,7 +223,6 @@ function confirmLogout() {
 <body>
 
 <div class="sidebar">
-    <img src="https://car-logos.org/wp-content/uploads/2022/08/perodua.png" alt="Logo" class="logo-main">
     <h2>Perodua</h2>
     <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
     <a href="AdminDashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
@@ -307,8 +325,8 @@ function confirmLogout() {
         <div class="modal-buttons">
             <form id="deleteForm" method="POST">
                 <input type="hidden" name="delete_id" id="delete_id_input">
-                <button type="button" onclick="confirmDelete()" style="background:#e53935; color:white; border-radius:8px;">Yes</button>
-                <button type="button" onclick="closeModal('deleteModal')" style="background:#ccc; border-radius:8px;">No</button>
+                <button type="button" onclick="confirmDelete()" style="background:#e60000; color:white;">Yes</button>
+                <button type="button" onclick="closeModal('deleteModal')" style="background:#ccc;">No</button>
                 <input type="hidden" name="delete_confirm" value="1">
             </form>
         </div>
@@ -321,8 +339,8 @@ function confirmLogout() {
         <h3>Confirm Logout?</h3>
         <div class="modal-buttons">
             <form id="logoutForm" method="POST">
-                <button type="button" onclick="confirmLogout()" style="background:#4CAF50; color:white; border-radius:8px;">Yes</button>
-                <button type="button" onclick="closeModal('logoutModal')" style="background:#ccc; border-radius:8px;">No</button>
+                <button type="button" onclick="confirmLogout()" style="background:#000; color:white;">Yes</button>
+                <button type="button" onclick="closeModal('logoutModal')" style="background:#ccc;">No</button>
                 <input type="hidden" name="logout_confirm" value="1">
             </form>
         </div>
