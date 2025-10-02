@@ -3,7 +3,6 @@ session_start();
 $conn = new mysqli("localhost", "root", "", "spareparts");
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
-// Redirect if not logged in or not GM
 if(!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
     header("Location: LoginPerodua.php");
     exit;
@@ -16,13 +15,13 @@ $today = date("Y-m-d");
 $msg = "";
 
 // Handle logout
-if (isset($_POST['logout'])) {
+if (isset($_POST['logout_confirm'])) {
     session_destroy();
     header("Location: LoginPerodua.php");
     exit;
 }
 
-// GM can submit/update attendance
+// GM Attendance Submission
 if (isset($_POST['status'], $_POST['sub_status'], $_POST['start_date'], $_POST['end_date'])) {
     $status = $_POST['status'];
     $sub_status = $_POST['sub_status'];
@@ -51,8 +50,8 @@ if (isset($_POST['status'], $_POST['sub_status'], $_POST['start_date'], $_POST['
     }
 }
 
-// Handle delete (one by one)
-if (isset($_POST['delete_id'])) {
+// Handle delete
+if (isset($_POST['delete_confirm'])) {
     $delete_id = $_POST['delete_id'];
     $del = $conn->prepare("DELETE FROM attendance WHERE id=? AND employee_id=?");
     $del->bind_param("is", $delete_id, $emp_id);
@@ -63,30 +62,14 @@ if (isset($_POST['delete_id'])) {
     }
 }
 
-// Fetch today
+// Fetch records
 $today_sql = "SELECT * FROM attendance WHERE employee_id=? AND date = ?";
 $today_stmt = $conn->prepare($today_sql);
 $today_stmt->bind_param("ss", $emp_id, $today);
 $today_stmt->execute();
 $todayRecord = $today_stmt->get_result();
 
-// Fetch history
-$history_sql = "
-    SELECT * FROM attendance 
-    WHERE employee_id=? AND date < ?
-    ORDER BY date DESC
-";
-$history = $conn->prepare($history_sql);
-$history->bind_param("ss", $emp_id, $today);
-$history->execute();
-$records = $history->get_result();
-
-// Fetch future (ONLY beyond today)
-$future_sql = "
-    SELECT * FROM attendance 
-    WHERE employee_id=? AND date > ?
-    ORDER BY date ASC
-";
+$future_sql = "SELECT * FROM attendance WHERE employee_id=? AND date > ? ORDER BY date ASC";
 $future = $conn->prepare($future_sql);
 $future->bind_param("ss", $emp_id, $today);
 $future->execute();
@@ -96,249 +79,138 @@ $futureRecords = $future->get_result();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>GM Attendance - Perodua</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * { 
-            box-sizing: border-box; 
-            margin:0; 
-            padding:0; 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-        }
+<meta charset="UTF-8">
+<title>GM Attendance - Perodua</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
+    body { background:#f2f2f2; color:#111; min-height:100vh; }
 
-        body { 
-            background: #f5f5f5; 
-            display: flex; 
-            min-height: 100vh; 
-        }
+    /* Sidebar */
+    .sidebar {
+        position: fixed; left:0; top:0; bottom:0; width:250px;
+        background:#111; color:white; padding:30px 0;
+        box-shadow:3px 0 15px rgba(0,0,0,0.2);
+    }
+    .sidebar img.logo-main { width: 140px; display:block; margin:0 auto 20px; border-radius:20%; }
+    .sidebar h2 { text-align:center; margin-bottom:25px; font-size:26px; color:white; }
+    .sidebar a { display:flex; align-items:center; gap:12px; padding:12px 25px; margin:5px 15px; border-radius:8px; font-weight:500; transition:0.3s; color:white; }
+    .sidebar a:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+    .sidebar i { font-size:18px; }
 
-        .sidebar {
-            width: 260px; 
-            background: linear-gradient(180deg, #1b5e20, #388e3c); 
-            color: white; 
-            position: fixed; 
-            top: 0; 
-            bottom: 0; 
-            left: 0; 
-            padding-top: 30px; 
-            box-shadow: 3px 0 15px rgba(0,0,0,0.2); 
-        }
-        
-        .sidebar img.logo-main { 
-            display: block; 
-            margin: 0 auto 25px; 
-            width: 160px; 
-            border-radius: 20%; 
-        }
+    /* Topbar */
+    .topbar {
+        position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
+        display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
+    }
+    .topbar h3 { font-weight:500; }
+    .topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
+    .logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
+    .logout-btn:hover { background:#e0e0e0; }
 
-        .sidebar h2 {
-            text-align: center; 
-            font-size: 26px; 
-            margin-bottom: 25px; 
-            color:white;
-        }
+    /* Main Content */
+    .main-content { margin-left:250px; padding:100px 30px 30px 30px; }
+    h2 { text-align:center; color:#111; margin-bottom:30px; }
+    .msg { text-align:center; color:#d32f2f; font-weight:500; margin:10px 0; }
 
-        .sidebar a { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            padding: 15px 25px; 
-            margin: 5px 10px; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            font-weight: 500; 
-            transition: all 0.3s; 
-        }
+    /* Card */
+    .card { background:#fff; padding:25px; border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.1); margin-bottom:30px; transition:0.3s; }
+    .card:hover { box-shadow:0 12px 25px rgba(0,0,0,0.2); }
 
-        .sidebar a:hover {
-            background: rgba(255,255,255,0.15); 
-            transform: translateX(10px); 
-        }
+    /* Forms */
+    form { display:flex; flex-wrap:wrap; justify-content:center; gap:15px; align-items:center; margin-bottom:20px; }
+    select, input[type=text], input[type=date] { padding:10px 12px; border:1px solid #ccc; border-radius:8px; min-width:160px; }
+    button { padding:8px 18px; border:none; border-radius:8px; cursor:pointer; font-weight:500; transition:0.3s; }
 
-        .sidebar a i { 
-            font-size: 18px;
-         }
+    button[type="submit"] { background:#4CAF50; color:white; }
+    button[type="submit"]:hover { background:#388E3C; }
 
-        .topbar { 
-            position: fixed; 
-            top: 0; 
-            left: 260px; 
-            right: 0; 
-            height: 70px; 
-            background: #2e7d32; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 0 30px; 
-            color: white; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
-            z-index: 1000; 
-        }
+    .delete-btn { background:#e53935; color:white; border-radius:8px; }
+    .delete-btn:hover { background:#b71c1c; }
 
-        .topbar h3 { 
-            font-weight: 500; 
-            font-size: 18px; 
-        }
+    .toggle-btn { background:#2196F3; color:white; margin:10px 0; border-radius:8px; }
+    .toggle-btn:hover { background:#1976d2; }
 
-        .topbar .date-time { 
-            font-weight: 400; 
-            opacity: 0.85; 
-            font-size: 15px; 
-            display: flex; 
-            gap: 20px; 
-        }
+    /* Table */
+    table { width:100%; border-collapse: collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05); }
+    th, td { padding:12px; text-align:center; border-bottom:1px solid #eee; }
+    th { background:#111; color:white; text-transform:uppercase; font-size:14px; }
+    tr:hover { background:#f1f1f1; }
+    .badge { padding:5px 10px; border-radius:12px; color:white; font-weight:600; display:inline-block; }
+    .badge-mia { background:#e53935; }
+    .badge-outstation { background:#ffb300; color:#000; }
+    .badge-available { background:#43a047; }
 
-        .logout-btn { 
-            background: #c62828; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: 0.3s; 
-        }
+    /* Modal */
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:2000; }
+    .modal-content { background:#fff; padding:25px; border-radius:12px; width:320px; text-align:center; }
+    .modal-content h3 { margin-bottom:20px; color:#111; }
+    .modal-buttons { display:flex; justify-content:space-around; }
+    .modal-buttons button { width:100px; }
 
-        .logout-btn:hover {
-            background: #b71c1c; 
-            transform: scale(1.05); 
-        }
+    /* Responsive */
+    @media(max-width:900px) {
+        .main-content { padding:120px 15px 30px 15px; }
+        form { flex-direction:column; }
+        select, input[type=text], input[type=date], button { width:90%; }
+    }
+</style>
+<script>
+let deleteId = null;
 
-        .main-content { 
-            margin-left: 260px; 
-            padding: 100px 30px 30px 30px; 
-            width: 100%; 
-        }
-        
-        h2 { 
-            color: #2e7d32; 
-            text-align: center; 
-            margin-bottom: 20px; 
-        }
+function updateSubStatusOptions() {
+    const status = document.getElementById('status').value;
+    const subStatusSelect = document.getElementById('sub_status');
+    subStatusSelect.innerHTML = '';
+    let options = [];
+    if (status==='MIA/MC') options=['AL - Annual Leave','MC - Medical Leave','EL - Emergency Leave','HL - Hospitalisation Leave','ML - Maternity Leave','1/2pm - Half Day (PM)','1/2am - Half Day (AM)','MIA - Missing In Action'];
+    else if (status==='OutStation') options=['TR - Training','OS - OutStation'];
+    else if (status==='Available') options=['In Office'];
+    options.forEach(opt=>{ let o=document.createElement('option'); o.value=o.text=opt; subStatusSelect.appendChild(o); });
+}
 
-        form { 
-            margin: 20px 0; 
-            text-align: center; 
-        }
+function toggleFuture() {
+    const section=document.getElementById("futureSection");
+    section.style.display=(section.style.display==="none"||section.style.display==="")?"block":"none";
+}
 
-        select, input[type=text], input[type=date] { 
-            padding: 10px;
-            margin: 8px; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            min-width: 200px; 
-        }
+function updateClock() {
+    const now=new Date();
+    document.getElementById("clock").textContent=now.toLocaleTimeString();
+}
+setInterval(updateClock,1000);
 
-        button {
-            background: #4CAF50; 
-            color: white; 
-            border: none; 
-            padding: 8px 15px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            font-weight: 500; 
-        }
+// Modal functions
+function showDeleteModal(id) {
+    deleteId = id;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+function confirmDelete() {
+    document.getElementById('delete_id_input').value = deleteId;
+    document.getElementById('deleteForm').submit();
+}
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
 
-        button:hover {
-            background: #388E3C; 
-            }
-
-        .delete-btn {
-            background: #d32f2f; 
-        }
-
-        .delete-btn:hover { 
-            background: #b71c1c; 
-        }
-
-        .msg { 
-            text-align: center; 
-            margin: 10px 0; 
-            color: #d32f2f; 
-            font-weight: 500; 
-        }
-
-        table {
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px; 
-            box-shadow:0 5px 15px rgba(0,0,0,0.05); 
-            border-radius: 8px; 
-            overflow: hidden; 
-        }
-        
-        th, td {
-             border: 1px solid #ddd; 
-             padding: 12px; 
-             text-align: center; 
-            }
-
-        th { 
-            background: #2e7d32; 
-            color: white; 
-            text-transform: uppercase; 
-        }
-
-        .status-mia {
-            background-color: #ffcccc; 
-            font-weight: bold; 
-        }
-
-        .status-outstation { 
-            background-color: #fff4cc; 
-            font-weight: bold; 
-        }
-
-        .status-available { 
-            background-color: #ccffcc; 
-            font-weight: bold; 
-        }
-
-        #futureSection { display:none; }
-    </style>
-    <script>
-        function updateSubStatusOptions() {
-            const status = document.getElementById('status').value;
-            const subStatusSelect = document.getElementById('sub_status');
-            subStatusSelect.innerHTML = '';
-            let options = [];
-            if (status === 'MIA/MC') {
-                options = ['AL - Annual Leave','MC - Medical Leave','EL - Emergency Leave','HL - Hospitalisation Leave',
-                            'ML - Maternity Leave','1/2pm - Half Day (PM)','1/2am - Half Day (AM)','MIA - Missing In Action'];
-            } else if (status === 'OutStation') {
-                options = ['TR - Training','OS - OutStation'];
-            } else if (status === 'Available') {
-                options = ['In Office'];
-            }
-            options.forEach(function(opt){
-                let option = document.createElement('option');
-                option.value = opt;
-                option.text = opt;
-                subStatusSelect.appendChild(option);
-            });
-        }
-        function toggleFuture() {
-            const section = document.getElementById("futureSection");
-            section.style.display = (section.style.display === "none" || section.style.display === "") ? "block" : "none";
-        }
-        function updateClock() {
-            const now = new Date();
-            document.getElementById("clock").textContent = now.toLocaleTimeString();
-        }
-        setInterval(updateClock, 1000);
-    </script>
+function showLogoutModal() {
+    document.getElementById('logoutModal').style.display = 'flex';
+}
+function confirmLogout() {
+    document.getElementById('logoutForm').submit();
+}
+</script>
 </head>
 <body>
+
 <div class="sidebar">
-    <img src="https://car-logos.org/wp-content/uploads/2022/08/perodua.png" alt="Perodua Logo" class="logo-main">
+    <img src="https://car-logos.org/wp-content/uploads/2022/08/perodua.png" alt="Logo" class="logo-main">
     <h2>Perodua</h2>
     <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
-    <a href="Admindashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
+    <a href="AdminDashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
     <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
     <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
-    <a href="AdminEmployeeList.php"><i class="fas fa-users"></i> Update Employee</a>
+    <a href="AdminEmployeeList.php"><i class="fas fa-user-cog"></i> Update Employee</a>
 </div>
 
 <div class="topbar">
@@ -349,99 +221,113 @@ $futureRecords = $future->get_result();
             <span id="clock">--:--:--</span>
         </div>
     </div>
-    <form method="POST">
-        <button type="submit" name="logout" class="logout-btn">Logout</button>
-    </form>
+    <button class="logout-btn" onclick="showLogoutModal()">Logout</button>
 </div>
 
 <div class="main-content">
     <h2>GM Attendance - Staff ID: <?= htmlspecialchars($emp_id) ?></h2>
 
-    <!-- Attendance submission -->
-    <form method="POST">
-        <label>Status:</label>
-        <select name="status" id="status" onchange="updateSubStatusOptions()" required>
-            <option value="">--Select--</option>
-            <option value="MIA/MC">MIA/MC</option>
-            <option value="OutStation">OutStation</option>
-            <option value="Available">Available</option>
-        </select>
-        <label>Sub-Status:</label>
-        <select name="sub_status" id="sub_status" required>
-            <option value="">--Select--</option>
-        </select>
-        <input type="text" name="note" placeholder="Add Note (optional)">
-        <br>
-        <label>From:</label>
-        <input type="date" name="start_date" required>
-        <label>To:</label>
-        <input type="date" name="end_date" required>
-        <button type="submit">Submit</button>
-    </form>
+    <div class="card">
+        <form method="POST">
+            <select name="status" id="status" onchange="updateSubStatusOptions()" required>
+                <option value="">--Select Status--</option>
+                <option value="MIA/MC">MIA/MC</option>
+                <option value="OutStation">OutStation</option>
+                <option value="Available">Available</option>
+            </select>
+            <select name="sub_status" id="sub_status" required><option value="">--Select Sub-Status--</option></select>
+            <input type="text" name="note" placeholder="Add Note (optional)">
+            <input type="date" name="start_date" required>
+            <input type="date" name="end_date" required>
+            <button type="submit">Submit</button>
+        </form>
+        <div class="msg"><?= $msg ?></div>
+    </div>
 
-    <div class="msg"><?= $msg ?></div>
-
-    <h3>Today Attendance Update</h3>
-    <table>
-        <tr><th>Date</th><th>Status</th><th>Sub-Status</th><th>Note</th><th>Action</th></tr>
-        <?php if ($todayRecord->num_rows > 0): ?>
-            <?php while($row = $todayRecord->fetch_assoc()): ?>
+    <div class="card">
+        <h3>Today Attendance Update</h3>
+        <table>
+            <tr><th>Date</th><th>Status</th><th>Sub-Status</th><th>Note</th><th>Action</th></tr>
+            <?php if ($todayRecord->num_rows>0): while($row=$todayRecord->fetch_assoc()): ?>
                 <?php
-                    $statusClass = "";
-                    if ($row['status'] == "MIA/MC") $statusClass = "status-mia";
-                    elseif ($row['status'] == "OutStation") $statusClass = "status-outstation";
-                    elseif ($row['status'] == "Available") $statusClass = "status-available";
+                    $badgeClass=""; 
+                    if($row['status']=="MIA/MC") $badgeClass="badge-mia";
+                    elseif($row['status']=="OutStation") $badgeClass="badge-outstation";
+                    elseif($row['status']=="Available") $badgeClass="badge-available";
                 ?>
-                <tr class="<?= $statusClass ?>">
+                <tr>
                     <td><?= htmlspecialchars($row['date']) ?></td>
-                    <td><?= htmlspecialchars($row['status']) ?></td>
+                    <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($row['status']) ?></span></td>
                     <td><?= htmlspecialchars($row['sub_status']) ?></td>
                     <td><?= htmlspecialchars($row['note']) ?></td>
                     <td>
-                        <form method="POST" style="display:inline;">
-                            <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
-                            <button type="submit" class="delete-btn" onclick="return confirm('Delete this application?')">Delete</button>
-                        </form>
+                        <button class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button>
                     </td>
                 </tr>
-            <?php endwhile; ?>
-        <?php else: ?>
-            <tr><td colspan="5">❌ No attendance submitted for today.</td></tr>
-        <?php endif; ?>
-    </table>
-
-    <button type="button" class="toggle-btn" onclick="toggleFuture()">Show/Hide Future Applications</button>
-
-    <div id="futureSection">
-        <h3>Future Applications</h3>
-        <table>
-            <tr><th>Date</th><th>Status</th><th>Sub-Status</th><th>Note</th><th>Action</th></tr>
-            <?php if ($futureRecords->num_rows > 0): ?>
-                <?php while($row = $futureRecords->fetch_assoc()): ?>
-                    <?php
-                        $statusClass = "";
-                        if ($row['status'] == "MIA/MC") $statusClass = "status-mia";
-                        elseif ($row['status'] == "OutStation") $statusClass = "status-outstation";
-                        elseif ($row['status'] == "Available") $statusClass = "status-available";
-                    ?>
-                    <tr class="<?= $statusClass ?>">
-                        <td><?= htmlspecialchars($row['date']) ?></td>
-                        <td><?= htmlspecialchars($row['status']) ?></td>
-                        <td><?= htmlspecialchars($row['sub_status']) ?></td>
-                        <td><?= htmlspecialchars($row['note']) ?></td>
-                        <td>
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="delete_id" value="<?= $row['id'] ?>">
-                                <button type="submit" class="delete-btn" onclick="return confirm('Delete this application?')">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr><td colspan="5">No future applications found.</td></tr>
+            <?php endwhile; else: ?>
+                <tr><td colspan="5">❌ No attendance submitted for today.</td></tr>
             <?php endif; ?>
         </table>
     </div>
+
+    <div class="card">
+        <button type="button" class="toggle-btn" onclick="toggleFuture()">Show/Hide Future Applications</button>
+        <div id="futureSection">
+            <h3>Future Applications</h3>
+            <table>
+                <tr><th>Date</th><th>Status</th><th>Sub-Status</th><th>Note</th><th>Action</th></tr>
+                <?php if ($futureRecords->num_rows>0): while($row=$futureRecords->fetch_assoc()): ?>
+                    <?php
+                        $badgeClass=""; 
+                        if($row['status']=="MIA/MC") $badgeClass="badge-mia";
+                        elseif($row['status']=="OutStation") $badgeClass="badge-outstation";
+                        elseif($row['status']=="Available") $badgeClass="badge-available";
+                    ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['date']) ?></td>
+                        <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($row['status']) ?></span></td>
+                        <td><?= htmlspecialchars($row['sub_status']) ?></td>
+                        <td><?= htmlspecialchars($row['note']) ?></td>
+                        <td>
+                            <button class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button>
+                        </td>
+                    </tr>
+                <?php endwhile; else: ?>
+                    <tr><td colspan="5">No future applications found.</td></tr>
+                <?php endif; ?>
+            </table>
+        </div>
+    </div>
 </div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Deletion?</h3>
+        <div class="modal-buttons">
+            <form id="deleteForm" method="POST">
+                <input type="hidden" name="delete_id" id="delete_id_input">
+                <button type="button" onclick="confirmDelete()" style="background:#e53935; color:white; border-radius:8px;">Yes</button>
+                <button type="button" onclick="closeModal('deleteModal')" style="background:#ccc; border-radius:8px;">No</button>
+                <input type="hidden" name="delete_confirm" value="1">
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div id="logoutModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Logout?</h3>
+        <div class="modal-buttons">
+            <form id="logoutForm" method="POST">
+                <button type="button" onclick="confirmLogout()" style="background:#4CAF50; color:white; border-radius:8px;">Yes</button>
+                <button type="button" onclick="closeModal('logoutModal')" style="background:#ccc; border-radius:8px;">No</button>
+                <input type="hidden" name="logout_confirm" value="1">
+            </form>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
