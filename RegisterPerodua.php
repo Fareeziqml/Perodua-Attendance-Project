@@ -4,10 +4,11 @@ $conn = new mysqli("localhost", "root", "", "spareparts");
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
 $msg = "";
-if(isset($_POST['register'])) {
+if(isset($_POST['register_confirm'])) { // Triggered after confirmation
     $employee_id = $_POST['employee_id'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $name = $_POST['name'];
+    $email = $_POST['email'];
     $department = $_POST['department'];
     $role = $_POST['role'];
 
@@ -20,8 +21,8 @@ if(isset($_POST['register'])) {
         move_uploaded_file($_FILES["photo"]["tmp_name"], $photo);
     }
 
-    $stmt = $conn->prepare("INSERT INTO employee (employee_id, password, photo, name, department, role) VALUES (?,?,?,?,?,?)");
-    $stmt->bind_param("ssssss", $employee_id, $password, $photo, $name, $department, $role);
+    $stmt = $conn->prepare("INSERT INTO employee (employee_id, password, photo, name, email, department, role) VALUES (?,?,?,?,?,?,?)");
+    $stmt->bind_param("sssssss", $employee_id, $password, $photo, $name, $email, $department, $role);
 
     if($stmt->execute()) {
         $msg = "✅ Registration successful. You can now login.";
@@ -43,7 +44,6 @@ if(isset($_POST['register'])) {
             color: #333;
         }
 
-        /* Header with video background */
         header {
             position: relative;
             height: 35vh;
@@ -84,7 +84,6 @@ if(isset($_POST['register'])) {
             font-weight: 300;
         }
 
-        /* Form section */
         .form-section {
             display: flex;
             justify-content: center;
@@ -167,6 +166,55 @@ if(isset($_POST['register'])) {
             padding: 12px 0;
             font-size: 14px;
         }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeInOverlay 0.3s ease;
+            z-index: 999;
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .popup-box {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 6px 20px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 360px;
+            animation: fadeInPopup 0.4s ease;
+        }
+
+        @keyframes fadeInPopup {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .popup-box h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #333;
+        }
+
+        .popup-box .popup-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .popup-box button {
+            width: 40%;
+        }
     </style>
 </head>
 <body>
@@ -185,10 +233,12 @@ if(isset($_POST['register'])) {
 <div class="form-section">
     <div class="form-box">
         <h2>Register 👨🏻‍💼</h2>
-        <form method="POST" enctype="multipart/form-data">
+        <form id="registerForm" method="POST" enctype="multipart/form-data">
             <input type="text" name="employee_id" placeholder="Employee ID" required>
             <input type="password" name="password" placeholder="Password" required>
             <input type="text" name="name" placeholder="Full Name" required>
+            <!-- New Gmail Input -->
+            <input type="email" name="email" placeholder="Gmail" pattern="[a-z0-9._%+-]+@gmail\.com" required>
             <select name="department" required>
                 <option value="">--Select Department--</option>
                 <option>Management</option>
@@ -203,7 +253,7 @@ if(isset($_POST['register'])) {
                 <option value="employee">Employee</option>
             </select>
             <input type="file" name="photo" accept="image/*" required>
-            <button type="submit" name="register">Register</button>
+            <button type="button" onclick="showPopup()">Register</button>
         </form>
         <div class="msg"><?= $msg ?></div>
         <form action="LoginPerodua.php" method="get">
@@ -212,9 +262,39 @@ if(isset($_POST['register'])) {
     </div>
 </div>
 
+<div class="popup-overlay" id="popup">
+    <div class="popup-box">
+        <h3>Are you sure you want to register?</h3>
+        <div class="popup-buttons">
+            <button onclick="confirmRegister()">Yes</button>
+            <button onclick="closePopup()" class="login-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <footer>
     &copy; <?php echo date("Y"); ?> Perodua Spare Part Division
 </footer>
+
+<script>
+function showPopup(){
+    document.getElementById('popup').style.display = "flex";
+}
+
+function closePopup(){
+    document.getElementById('popup').style.display = "none";
+}
+
+function confirmRegister(){
+    const form = document.getElementById('registerForm');
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = "register_confirm";
+    hidden.value = "1";
+    form.appendChild(hidden);
+    form.submit();
+}
+</script>
 
 </body>
 </html>
