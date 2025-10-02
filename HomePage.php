@@ -102,6 +102,7 @@
             text-align: center;
             padding: 50px 20px;
             background: #fff;
+            position: relative;
         }
 
         .models-section h2 {
@@ -114,34 +115,53 @@
             color: #d32f2f; /* highlight color */
         }
 
-        .models-gallery {
+        .models-carousel {
             display: flex;
+            align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
-            gap: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arrow-btn {
+            font-size: 30px;
+            background: rgba(0,0,0,0.1);
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.3s;
+            z-index: 10;
+        }
+
+        .arrow-btn:hover {
+            background: rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .carousel-track {
+            display: flex;
+            align-items: center;
+            transition: transform 0.5s ease;
         }
 
         .model-card {
             text-align: center;
-            transition: transform 0.3s ease;
+            margin: 0 15px;
+            transition: transform 0.5s, opacity 0.5s;
+            cursor: pointer;
         }
 
         .model-card img {
-            width: 280px;
-            height: auto;
+            width: 220px;
             border-radius: 12px;
             box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .model-card img:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            transition: transform 0.5s ease, opacity 0.5s ease;
         }
 
         .model-card p {
             margin-top: 10px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #444;
         }
@@ -159,12 +179,12 @@
         .contact-info {
             flex: 1;
             min-width: 280px;
-            margin-right: 30px;
-            text-align: center; /* Center text + logo */
+            margin-bottom: 30px;
+            text-align: center;
         }
 
         .contact-logo {
-            height: 50px;  /* smaller size */
+            height: 50px;
             margin-bottom: 10px;
             display: block;
             margin-left: auto;
@@ -182,7 +202,7 @@
         }
 
         .contact-map {
-            flex: 1;
+            flex: 2;
             min-width: 300px;
         }
 
@@ -242,27 +262,43 @@
     <a href="LoginPerodua.php" class="enter-btn"> Enter the System</a>
 </div>
 
-<!-- Perodua Models Section -->
+<!-- Perodua Models Carousel -->
 <section class="models-section">
-    <h2>Top 3 <span>Perodua Models</span></h2>
-    <div class="models-gallery">
-        <div class="model-card">
-            <img src="MyviPicture.png" alt="Perodua Myvi">
-            <p>Perodua Myvi</p>
+    <h2>Our <span>Perodua Models</span></h2>
+    <div class="models-carousel">
+        <button class="arrow-btn" id="prev">&#8592;</button>
+        <div class="carousel-track" id="carouselTrack">
+            <div class="model-card">
+                <img src="Myvi.png" alt="Perodua Myvi">
+                <p>Perodua Myvi</p>
+            </div>
+            <div class="model-card">
+                <img src="Axia.png" alt="Perodua Axia">
+                <p>Perodua Axia</p>
+            </div>
+            <div class="model-card">
+                <img src="Bezza.png" alt="Perodua Bezza">
+                <p>Perodua Bezza</p>
+            </div>
+            <div class="model-card">
+                <img src="Ativa.png" alt="Perodua Ativa">
+                <p>Perodua Ativa</p>
+            </div>
+            <div class="model-card">
+                <img src="Aruz.png" alt="Perodua Aruz">
+                <p>Perodua Aruz</p>
+            </div>
+            <div class="model-card">
+                <img src="Alza.png" alt="Perodua Alza">
+                <p>Perodua Alza</p>
+            </div>
         </div>
-        <div class="model-card">
-            <img src="Axia.png" alt="Perodua Axia">
-            <p>Perodua Axia</p>
-        </div>
-        <div class="model-card">
-            <img src="Bezza.png" alt="Perodua Bezza">
-            <p>Perodua Bezza</p>
-        </div>
+        <button class="arrow-btn" id="next">&#8594;</button>
     </div>
 </section>
 
-<!-- Contact Section with Info + Map -->
-<div class="contact-section">
+<!-- Contact Section moved below models carousel -->
+<section class="contact-section">
     <div class="contact-info">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Perodua_Logo_%282008_-_Present%29.svg/330px-Perodua_Logo_%282008_-_Present%29.svg.png" 
              alt="Perodua Logo" class="contact-logo">
@@ -272,15 +308,58 @@
         <p><b>Sektor:</b> Perdagangan Jual Borong, dan Jual Runcit, Pembaikan Kenderaan</p>
     </div>
     <div class="contact-map">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3324.288639940672!2d101.57069607403389!3d3.368986451763893!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc42462a62c803%3A0x11e19edecbedb342!2sPerodua%20Corporate%20Building!5e1!3m2!1sen!2smy!4v1759306119378!5m2!1sen!2smy" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3324.288639940672!2d101.57069607403389!3d3.368986451763893!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc42462a62c803%3A0x11e19edecbedb342!2sPerodua%20Corporate%20Building!5e1!3m2!1sen!2smy!4v1759306119378!5m2!1sen!2smy" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
-</div>
+</section>
 
 <footer>
     &copy; <?php echo date("Y"); ?> Perodua Spare Part Division <br>
     <a href="https://perodua.com.my/contact-us" target="_blank" class="contact-btn">📞 Contact Us</a>
 </footer>
+
+<script>
+    const track = document.getElementById("carouselTrack");
+    const cards = Array.from(track.getElementsByClassName("model-card"));
+    let currentIndex = 0;
+
+    function updateCarousel() {
+        cards.forEach((card, index) => {
+            const offset = index - currentIndex;
+            if(offset === 0){
+                card.style.transform = 'scale(1.2) translateX(0)';
+                card.style.opacity = '1';
+                card.style.zIndex = '10';
+            } else {
+                card.style.transform = `scale(0.8) translateX(${offset * 220}px)`;
+                card.style.opacity = '0.5';
+                card.style.zIndex = '5';
+            }
+        });
+
+        const translateX = -(currentIndex * 220) + track.offsetWidth/2 - 110; // 110 = half card width
+        track.style.transform = `translateX(${translateX}px)`;
+    }
+
+    document.getElementById("prev").addEventListener("click", () => {
+        currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+        updateCarousel();
+    });
+
+    document.getElementById("next").addEventListener("click", () => {
+        currentIndex = (currentIndex + 1) % cards.length;
+        updateCarousel();
+    });
+
+    cards.forEach((card, i) => {
+        card.addEventListener("click", () => {
+            currentIndex = i;
+            updateCarousel();
+        });
+    });
+
+    window.addEventListener('resize', updateCarousel);
+    updateCarousel();
+</script>
 
 </body>
 </html>
