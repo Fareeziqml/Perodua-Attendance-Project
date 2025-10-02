@@ -68,162 +68,142 @@ $greenStatuses = ['In Office'];
             background:#f4f6f9; 
             color:#333;
         }
-        header {
-            display: flex;
-            justify-content: space-between;
+
+        /* === Topbar === */
+        .topbar {
+            position: fixed; left:0; right:0; top:0; height:70px; background:#111; color:white;
+            display:flex; justify-content:space-between; align-items:center; padding:0 30px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
+        }
+        .topbar .left { display:flex; align-items:center; gap:20px; }
+        .topbar img { height:45px; }
+        .topbar nav { display:flex; gap:15px; }
+        .topbar nav a {
+            color:white; text-decoration:none; font-weight:500; padding:8px 14px;
+            border-radius:6px; transition:0.3s;
+        }
+        .topbar nav a:hover { background:#333; }
+        .logout-btn {
+            background:#fff; color:#111; border:none; padding:8px 18px;
+            border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s;
+        }
+        .logout-btn:hover { background:#e0e0e0; }
+
+        /* === Popup Styles === */
+        .popup-overlay {
+            position: fixed;
+            top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: none;
+            justify-content: center;
             align-items: center;
-            padding:15px 30px;
-            background: #388e3c;
-            color: white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 2000;
+            animation: fadeIn 0.4s ease forwards;
         }
-        header img {
-            height:50px;
+        .popup {
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            width: 320px;
+            transform: scale(0.8);
+            opacity: 0;
+            animation: scaleIn 0.35s ease forwards;
         }
-        .header-left {
-            display:flex;
-            align-items:center;
-            gap:20px;
+        .popup h3 {
+            margin: 0 0 15px;
+            font-size: 18px;
+            color:#111;
         }
-        .user-info {
-            font-size:14px;
-            line-height:1.4;
+        .popup button {
+            margin: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
         }
-        .clock {
-            font-weight:bold;
-            font-size:14px;
-        }
-        header nav {
-            display:flex;
-            gap:15px;
-        }
-        header nav a {
-            color:white;
-            text-decoration:none;
-            font-weight:500;
-            padding:8px 14px;
-            border-radius:5px;
-            transition: background 0.3s;
-        }
-        header nav a:hover {
-            background:#2e7d32;
-        }
-        header .logout {
-            background:#d32f2f;
-            padding:8px 14px;
-            border-radius:5px;
-        }
-        header .logout:hover {
-            background:#b71c1c;
-        }
+        .popup .yes-btn { background:#111; color:#fff; }
+        .popup .yes-btn:hover { background:#333; }
+        .popup .cancel-btn { background:#ccc; color:#111; }
+        .popup .cancel-btn:hover { background:#aaa; }
 
-        h2 {
-            text-align:center; 
-            margin:20px 0; 
-            font-size:24px; 
-            color:#2e7d32;
-        }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes scaleIn { from { transform: scale(0.8); opacity:0; } to { transform: scale(1); opacity:1; } }
 
-.table-container {
-    padding: 20px;
-    max-width: 100%;
-    max-height: 80vh;
-    overflow-x: auto;
-    overflow-y: auto;
-}
+        /* === Content === */
+        h2 { text-align:center; margin:100px 0 20px 0; font-size:24px; color:#111; }
+        .table-container { padding: 20px; max-width: 100%; max-height: 80vh; overflow:auto; }
+        table { border-collapse: collapse; table-layout: fixed; min-width: 1500px; background:white; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+        th, td { border:1px solid #555; padding:6px; text-align:center; font-size:13px; word-wrap: break-word; }
+        th { background:#111; color:white; font-size:14px; }
+        .dept-row td { background:#333; color:white; font-weight:bold; text-align:left; }
+        .summary-row { background:#222; color:white; font-weight:bold; }
+        input[type=text], textarea { width: 95%; padding:4px; font-size:12px; border:1px solid #888; border-radius:4px; }
+        textarea { resize: vertical; height:50px; }
+        .weekend { background:#f0f0f0; color:#111; }
 
-table { 
-    border-collapse: collapse; 
-    table-layout: fixed;
-    min-width: 1500px;
-    background:white;
-    border-radius:8px;
-    overflow:hidden;
-    box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-th, td { 
-    border:1px solid #ddd; 
-    padding:6px; 
-    text-align:center; 
-    font-size:13px; 
-    word-wrap: break-word;
-}
-
-        th { 
-            background:#388e3c; 
-            color:white; 
-            font-size:14px;
-        }
-        .dept-row td { 
-            background:#e8f5e9; 
-            font-weight:bold; 
-            text-align:left; 
-        }
-        .summary-row { 
-            background:#c8e6c9; 
-            font-weight:bold; 
-        }
-        input[type=text], textarea { 
-            width: 95%; 
-            padding:4px; 
-            font-size:12px; 
-            border:1px solid #ccc; 
-            border-radius:4px; 
-        }
-        textarea {
-            resize: vertical;
-            height:50px;
-        }
-
-        .weekend { background:#eeeeee; }
-        .status-red { background:#f44336; color:white; font-weight:bold; }      
-        .status-yellow { background:#ffeb3b; color:black; font-weight:bold; }    
-        .status-green { background:#4caf50; color:white; font-weight:bold; }     
+        /* Softer Status Colors */
+        .status-red { background:#ffb3b3; color:#b30000; font-weight:bold; }      
+        .status-yellow { background:#fff5b3; color:#7a7000; font-weight:bold; }    
+        .status-green { background:#b3ffb3; color:#006600; font-weight:bold; }     
 
         .submit-btn {
-            display:block;
-            margin:20px auto;
-            padding:10px 20px;
-            background:#388e3c;
-            color:white;
-            border:none;
-            border-radius:6px;
-            font-size:14px;
-            cursor:pointer;
-            transition:background 0.3s;
+            display:block; margin:20px auto; padding:10px 20px;
+            background:#111; color:white; border:none; border-radius:6px;
+            font-size:14px; cursor:pointer; transition:background 0.3s;
         }
-        .submit-btn:hover {
-            background:#2e7d32;
-        }
+        .submit-btn:hover { background:#333; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="header-left">
-        <div class="logo">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Perodua_Logo_%282008_-_Present%29.svg/2560px-Perodua_Logo_%282008_-_Present%29.svg.png" alt="Company Logo">
-        </div>
-        <div class="user-info">
+<div class="topbar">
+    <div class="left">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Perodua_Logo_%282008_-_Present%29.svg/2560px-Perodua_Logo_%282008_-_Present%29.svg.png" alt="Company Logo">
+        <div>
             <div>ID: <?= htmlspecialchars($emp_id) ?></div>
             <div>Name: <?= htmlspecialchars($emp_name) ?></div>
-            <div class="clock" id="clock"></div>
         </div>
     </div>
     <nav>
         <a href="AdminAttendanceUpdate.php">Update Attendance</a>
         <a href="AdminDashboard.php">Dashboard</a>
         <a href="AdminAttendanceRecord.php">Attendance Record</a>
-        <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
+        <a href="AttendanceRateTable.php">Attendance Rate</a>
         <a href="AdminEmployeeList.php">Employee List</a>
-        <a href="Logout.php" class="logout">Logout</a>
     </nav>
-</header>
+    <button type="button" class="logout-btn" onclick="openPopup('logoutPopup')">Logout</button>
+</div>
+
+<!-- Logout Popup -->
+<div class="popup-overlay" id="logoutPopup">
+    <div class="popup">
+        <h3>Are you sure you want to logout?</h3>
+        <form method="post" action="Logout.php" style="display:inline;">
+            <button type="submit" class="yes-btn">Yes</button>
+        </form>
+        <button type="button" class="cancel-btn" onclick="closePopup('logoutPopup')">Cancel</button>
+    </div>
+</div>
+
+<!-- Save Popup -->
+<div class="popup-overlay" id="savePopup">
+    <div class="popup">
+        <h3>Save Notes?</h3>
+        <p>Your changes will be saved.</p>
+        <button type="button" class="yes-btn" onclick="submitNotes()">Save</button>
+        <button type="button" class="cancel-btn" onclick="closePopup('savePopup')">Cancel</button>
+    </div>
+</div>
 
 <h2>Attendance Rate Table - <?= date("F Y") ?></h2>
 
 <div class="table-container">
-<form method="post" action="save_notes.php">
+<form method="post" action="save_notes.php" id="notesForm">
 <table>
     <tr>
         <th>No</th>
@@ -254,27 +234,21 @@ th, td {
 
                 <?php for ($d=1; $d <= $daysInMonth; $d++):
                     $sub_status = $attendance[$emp['employee_id']][$d] ?? ""; 
-
-                    // Determine color class
                     $class = '';
                     if (in_array($sub_status, $redStatuses)) {
                         $class = 'status-red';
-                        if (!in_array($d, $weekends)) {
-                            $dailyMIA[$d]++;
-                        }
+                        if (!in_array($d, $weekends)) $dailyMIA[$d]++;
                     } elseif (in_array($sub_status, $yellowStatuses)) {
                         $class = 'status-yellow';
                     } elseif (in_array($sub_status, $greenStatuses)) {
                         $class = 'status-green';
                     }
-
                     if (in_array($d, $weekends)) $class .= ' weekend';
                 ?>
                     <td class="<?= $class ?>"><?= htmlspecialchars($sub_status) ?></td>
                 <?php endfor; ?>
             </tr>
         <?php endforeach; ?>
-
     <?php endforeach; ?>
 
     <tr class="summary-row">
@@ -313,20 +287,20 @@ th, td {
     </tr>
 </table>
 
-<button type="submit" class="submit-btn">💾 Save Notes</button>
+<button type="button" class="submit-btn" onclick="openPopup('savePopup')">💾 Save Notes</button>
 </form>
 </div>
 
 <script>
-function updateClock() {
-    const now = new Date();
-    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-    const dateStr = now.toLocaleDateString('en-GB', options);
-    const timeStr = now.toLocaleTimeString('en-GB');
-    document.getElementById("clock").innerText = dateStr + " | " + timeStr;
+function openPopup(id) {
+    document.getElementById(id).style.display = "flex";
 }
-setInterval(updateClock, 1000);
-updateClock();
+function closePopup(id) {
+    document.getElementById(id).style.display = "none";
+}
+function submitNotes() {
+    document.getElementById("notesForm").submit();
+}
 </script>
 
 </body>
