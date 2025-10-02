@@ -8,7 +8,7 @@ if(!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
     exit;
 }
 
-$employee_name = $_SESSION['name'];
+$employee_name = $_SESSION['employee_name'] ?? $_SESSION['name'];
 $role = $_SESSION['role'];
 $today = date("Y-m-d");
 
@@ -33,7 +33,7 @@ $sql = "
 ";
 $result = $conn->query($sql);
 
-// Count statistics only for today's records
+// Count statistics
 $stats = ['available'=>0,'outstation'=>0,'mia'=>0,'none'=>0];
 $rows = [];
 while($row = $result->fetch_assoc()){
@@ -54,289 +54,140 @@ while($row = $result->fetch_assoc()){
     $rows[] = $row;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Attendance Dashboard - GM</title>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-*   {  
-    box-sizing: border-box; 
-    margin:0; 
-    padding:0; 
-    font-family: 'Segoe UI', Arial, sans-serif; 
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
+body { background:#f2f2f2; color:#111; min-height:100vh; }
+
+/* Sidebar */
+.sidebar {
+    position: fixed; left:0; top:0; bottom:0; width:250px;
+    background:#111; color:white; padding:30px 0;
+    box-shadow:3px 0 15px rgba(0,0,0,0.2);
+}
+.sidebar h2 { text-align:center; margin-bottom:25px; font-size:26px; color:white; }
+.sidebar a { display:flex; align-items:center; gap:12px; padding:12px 25px; margin:5px 15px; border-radius:8px; font-weight:500; transition:0.3s; color:white; }
+.sidebar a:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+.sidebar i { font-size:18px; }
+
+/* Topbar */
+.topbar {
+    position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
+    display:flex; justify-content:space-between; align-items:center; padding:0 30px; 
+    box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
+}
+.topbar h3 { font-weight:500; }
+.topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
+.logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
+.logout-btn:hover { background:#e0e0e0; }
+
+/* Main content */
+.main-content { margin-left: 250px; padding: 100px 30px 30px 30px; flex:1; }
+h2 { text-align:center; color:#222; margin-bottom:15px; font-size:28px; }
+h4 { text-align:center; color:#555; margin-top:0; font-size:16px; }
+
+/* Stat Cards */
+.stats { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-bottom:25px; }
+.card { flex:1; min-width:180px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.07); text-align:center; transition: transform 0.3s; }
+.card:hover { transform: translateY(-5px); }
+.card h3 { font-size:24px; color:#222; margin-bottom:8px; }
+.card p { font-size:14px; color:#555; }
+
+/* Container */
+.container { background:#fff; padding:25px 30px; border-radius:15px; box-shadow:0 6px 18px rgba(0,0,0,0.1); }
+
+/* Table */
+table { width:100%; border-collapse: collapse; margin-top:20px; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+th, td { padding:12px 15px; text-align:center; border-bottom:1px solid #eee; }
+th { background:#111; color:white; font-size:14px; text-transform:uppercase; }
+td { background:#fefefe; font-size:15px; }
+tr:hover td { background:#f1f1f1; transition:0.3s; }
+img { width:70px; height:70px; object-fit:cover; border-radius:50%; }
+
+/* Row coloring */
+.status-mia td { background-color:#f8d7da !important; }
+.status-out td { background-color:#fff3cd !important; }
+.status-avail td { background-color:#d4edda !important; }
+.status-none td { background-color:#ffffff !important; }
+
+/* Legend */
+.legend { margin:15px 0; display:flex; justify-content:center; gap:25px; }
+.legend-item { display:flex; align-items:center; gap:10px; font-size:14px; }
+.legend-box { width:22px; height:22px; border-radius:4px; border:1px solid #ccc; }
+.legend-red { background:#f8d7da; }
+.legend-yellow { background:#fff3cd; }
+.legend-green { background:#d4edda; }
+.legend-white { background:#ffffff; }
+
+/* Modal with fade + blur */
+.modal {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    justify-content:center; align-items:center; z-index:2000;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.modal.show { display:flex; opacity:1; }
+
+.modal-content {
+    background:#fff; padding:25px; border-radius:12px; width:320px; text-align:center;
+    transform: translateY(-20px);
+    opacity: 0;
+    animation: fadeInUp 0.4s forwards;
+}
+.modal-content h3 { margin-bottom:20px; color:#111; }
+.modal-buttons { display:flex; justify-content:space-around; gap:15px; }
+.modal-buttons button { flex:1; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; font-weight:500; }
+
+@keyframes fadeInUp {
+    from { opacity:0; transform: translateY(-20px); }
+    to { opacity:1; transform: translateY(0); }
 }
 
-    body {
-        display: flex; 
-        min-height: 100vh; 
-        background: #f4f6f9; 
-    }
-
-    /* Sidebar */
-    .sidebar {
-         width: 260px;
-         background: linear-gradient(180deg, #1b5e20, #388e3c);
-         color: white; 
-         position: fixed; 
-         top: 0; 
-         bottom: 0; 
-         left: 0; 
-         padding-top: 30px; 
-         box-shadow: 3px 0 15px rgba(0,0,0,0.2); 
-         transition: all 0.3s; 
-        }
-
-    .sidebar img.logo-main {
-         max-width: 160px; 
-         max-height: 160px; 
-         width: auto; 
-         height: auto; 
-         display: block; 
-         margin: 0 auto 25px; 
-         border-radius: 20%; 
-        }
-
-    .sidebar img.logo-main:hover { 
-        transform: scale(1.05); 
-    }
-
-    .sidebar h2 {
-         text-align: center; 
-         font-size: 26px; 
-         margin-bottom: 25px; 
-         color: #fff; 
-        }
-
-    .sidebar a {
-         display: flex; 
-         align-items: center; 
-         gap: 12px; 
-         padding: 15px 25px; 
-         margin: 5px 10px; 
-         color: white; 
-         text-decoration: none; 
-         border-radius: 8px; 
-         font-weight: 500; 
-         transition: all 0.3s; 
-        }
-
-    .sidebar a:hover { 
-         background: rgba(255,255,255,0.15); 
-         transform: translateX(10px); 
-        }
-
-    .sidebar a i {
-         font-size: 18px; 
-        }
-
-        /* Topbar */
-    .topbar { 
-        position: fixed; 
-        top: 0; 
-        left: 260px; 
-        right: 0; 
-        height: 70px; 
-        background: #2e7d32; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 0 30px; 
-        color: white; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
-        z-index: 1000; 
-    }
-
-    .topbar h3 {
-        font-weight: 500;
-        font-size: 18px; 
-        }
-
-    .topbar .date-time {
-        font-weight: 400;
-        opacity: 0.85; 
-        font-size: 15px; 
-        display: flex; 
-        gap: 20px; 
-    }
-
-    .logout-btn {
-        background: #c62828; 
-        border: none; 
-        padding: 10px 20px; 
-        border-radius: 8px; 
-        cursor: pointer;
-        font-weight: bold; 
-        transition: 0.3s; 
-        color:white;  
-    }
-
-    .logout-btn:hover {
-        background: #b71c1c; 
-        transform: scale(1.05); 
-    }
-
-        /* Main content */
-    .main-content {
-        margin-left: 260px; 
-        padding: 100px 30px 30px 30px; 
-        flex: 1; 
-    }
-
-    /* Stat Cards */
-    .stats { 
-        display: flex; 
-        gap: 20px; 
-        flex-wrap: wrap; 
-        justify-content: center; 
-        margin-bottom: 25px; 
-    }
-
-    .card {
-        flex: 1; 
-        min-width: 180px; 
-        background: white;
-        padding: 20px; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-        text-align: center; 
-        transition: transform 0.3s; 
-    }
-
-    .card:hover { 
-        transform: translateY(-5px); 
-    }
-
-    .card h3 { 
-        font-size: 24px;
-        color: #4CAF50; 
-        margin-bottom: 8px; 
-    }
-
-    .card p { 
-        font-size: 14px; 
-        color: #555; 
-    }
-
-    /* Container */
-    .container { 
-        background: #fff; 
-        padding: 25px 30px; 
-        border-radius: 15px; 
-        box-shadow: 0 6px 18px rgba(0,0,0,0.15); 
-    }
-    
-    /* Headings */
-    h2 { 
-        text-align: center;
-        color: #2e7d32; 
-        margin-bottom: 15px; 
-        font-size: 28px; 
-    }
-
-    h4 { 
-        text-align: center; 
-        color: #555; 
-        margin-top: 0; 
-        font-size: 16px; 
-    }
-
-    /* Table */
-    table { 
-        width: 100%; 
-        border-collapse: separate; 
-        border-spacing: 0; 
-        margin-top: 20px; 
-        border-radius: 10px; 
-        overflow: hidden; 
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    th, td { 
-        padding: 12px 15px; 
-        text-align: center; 
-    }
-
-    th {
-        background: #4CAF50;
-        color: white; 
-        font-size: 16px; 
-    }
-
-    td { 
-        background: #fefefe;
-        font-size: 15px; 
-    }
-
-    tr:hover td { 
-        background: #f1f1f1; 
-        transition: 0.3s; 
-    }
-
-    img { 
-        width: 70px; 
-        height: 70px; 
-        object-fit: cover; 
-        border-radius: 50%; 
-    }
-
-        /* Row coloring */
-    .status-mia td { background-color: #f8d7da !important; }   
-    .status-out td { background-color: #fff3cd !important; }   
-    .status-avail td { background-color: #d4edda !important; }   
-    .status-none td { background-color: #ffffff !important; }    
-
-        /* Legend */
-    .legend { 
-        margin: 15px 0;
-         display: flex; 
-         justify-content: center; 
-         gap: 25px; 
-        }
-
-    .legend-item { 
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
-        font-size: 14px; 
-    }
-
-    .legend-box { 
-        width: 22px;
-        height: 22px;
-        border-radius: 4px;
-        border: 1px solid #ccc; 
-    }
-
-    .legend-red { background: #f8d7da; }
-    .legend-yellow { background: #fff3cd; }
-    .legend-green { background: #d4edda; }
-    .legend-white { background: #ffffff; }
-
-        /* Responsive */
-    @media (max-width: 1200px) {
-        .main-content { margin-left: 0; margin-top: 100px; padding: 25px 15px; }
-        .topbar { left: 0; }
-        .sidebar { position: fixed; z-index: 1001; }
-        .stats { flex-direction: column; align-items: center; }
-        table th, table td { padding: 10px 8px; font-size: 14px; }
-    }   
-
+/* Responsive */
+@media(max-width:900px) {
+    .main-content { padding:120px 15px 30px 15px; margin-left:0; }
+    .topbar { left:0; }
+}
 </style>
+<script>
+function updateClock() {
+    document.getElementById("clock").textContent=new Date().toLocaleTimeString();
+}
+setInterval(updateClock,1000);
+updateClock();
+
+// Modal
+function showLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    modal.classList.add('show');
+}
+function closeModal(id){
+    const modal = document.getElementById(id);
+    modal.classList.remove('show');
+    setTimeout(()=> modal.style.display='none',400);
+}
+function confirmLogout() {
+    document.getElementById('logoutForm').submit();
+}
+</script>
 </head>
 <body>
 
 <!-- Sidebar -->
 <div class="sidebar">
-    <img src="https://car-logos.org/wp-content/uploads/2022/08/perodua.png" alt="Perodua Logo" class="logo-main">
     <h2>Perodua</h2>
     <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
-    <a href="Admindashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
+    <a href="AdminDashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
     <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
     <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
-    <a href="AdminEmployeeList.php"><i class="fas fa-users"></i> Update Employee</a>
+    <a href="AdminEmployeeList.php"><i class="fas fa-user-cog"></i> Update Employee</a>
 </div>
 
 <!-- Topbar -->
@@ -348,14 +199,11 @@ while($row = $result->fetch_assoc()){
             <span id="clock">--:--:--</span>
         </div>
     </div>
-    <form action="logout.php" method="post">
-        <button type="submit" class="logout-btn">Logout</button>
-    </form>
+    <button class="logout-btn" onclick="showLogoutModal()">Logout</button>
 </div>
 
 <!-- Main Content -->
 <div class="main-content">
-
     <!-- Stat Cards -->
     <div class="stats">
         <div class="card"><h3><?= $stats['available'] ?></h3><p>Available</p></div>
@@ -414,14 +262,19 @@ while($row = $result->fetch_assoc()){
     </div>
 </div>
 
-<script>
-function updateClock() {
-    const clock = document.getElementById('clock');
-    const now = new Date();
-    clock.textContent = now.toLocaleTimeString();
-}
-setInterval(updateClock, 1000);
-updateClock();
-</script>
+<!-- Logout Modal -->
+<div id="logoutModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Logout?</h3>
+        <div class="modal-buttons">
+            <form id="logoutForm" method="POST" action="LoginPerodua.php">
+                <input type="hidden" name="logout_confirm" value="1">
+                <button type="button" onclick="confirmLogout()" style="background:#4CAF50; color:white;">Yes</button>
+                <button type="button" onclick="closeModal('logoutModal')" style="background:#ccc;">No</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
