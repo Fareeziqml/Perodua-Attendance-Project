@@ -237,9 +237,10 @@ if(isset($_POST['login'])) {
             <button type="submit" class="register-btn">Register Here</button>
         </form>
 
-        <form action="ResetPassword.php" method="get">
-            <button type="submit" class="reset-btn">Request Reset Password</button>
+        <form action="forgot-password.php" method="get">
+            <button type="submit" class="reset-btn"> Forgot Password</button>
         </form>
+
     </div>
 </div>
 
