@@ -34,24 +34,35 @@ $colors = [];
 
 // Map each status to a fixed color
 $status_color_map = [
-    "MC/MIA" => "#E53935",       // Red
+    "MC/MIA"     => "#E53935",   // Red
     "OutStation" => "#FFEB3B",   // Yellow
-    "Available" => "#4CAF50"     // Green
+    "Available"  => "#4CAF50"    // Green
 ];
 
 $total_present = 0;
 $total_absent  = 0;
+$total_submitted = 0;
 
 while ($row = $status_res->fetch_assoc()) {
     $statuses[] = $row['status'];
     $status_counts[] = (int)$row['total'];
     $colors[] = $status_color_map[$row['status']] ?? "#64B5F6"; // Default Blue
 
+    $total_submitted += (int)$row['total'];
+
     if ($row['status'] === "Available" || $row['status'] === "OutStation") {
         $total_present += (int)$row['total'];
     } else {
         $total_absent += (int)$row['total'];
     }
+}
+
+/* --- Add Not Submitted --- */
+$not_submitted = max(0, $total_employees - $total_submitted);
+if ($not_submitted > 0) {
+    $statuses[] = "Not Submitted";
+    $status_counts[] = $not_submitted;
+    $colors[] = "#9E9E9E"; // Grey
 }
 
 /* --- Daily Attendance Rate (%) --- */
