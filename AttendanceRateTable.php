@@ -22,20 +22,12 @@ $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
 // === Define Malaysian Public Holidays (adjust yearly) ===
 $publicHolidays = [ 
-    "$year-01-01", // New Year’s Day
-    "$year-01-29", // Chinese New Year 
-    "$year-01-30", // Chinese New Year 
-    "$year-03-18", // Nuzul Quran
-    "$year-03-31", // Raya Aidilfitri 
-    "$year-04-01", // Raya Aidilfitri 
-    "$year-05-01", // Labor Day 
-    "$year-05-12", // Wesak Day 
-    "$year-06-02", // Agong Birthday 
-    "$year-10-20", // Deepavali
-    "$year-11-02", // Thaipusam 
-    "$year-12-11", // Sultan Selangor Birthday 
-    "$year-12-25", // Christmas 
-    ];
+    "$year-01-01", "$year-01-29", "$year-01-30",
+    "$year-03-18", "$year-03-31", "$year-04-01",
+    "$year-05-01", "$year-05-12", "$year-06-02",
+    "$year-10-20", "$year-11-02", "$year-12-11",
+    "$year-12-25"
+];
 
 // Get employees grouped by department (include POS)
 $emp_sql = "SELECT employee_id, name, POS, department, annual_leave, notes 
@@ -66,11 +58,10 @@ $weekends = [];
 $holidayDays = [];
 for ($d = 1; $d <= $daysInMonth; $d++) {
     $dateString = sprintf("%04d-%02d-%02d", $year, $month, $d);
-    $weekday = date("N", strtotime($dateString)); // 6=Sat, 7=Sun
+    $weekday = date("N", strtotime($dateString));
     if ($weekday >= 6) $weekends[] = $d;
     if (in_array($dateString, $publicHolidays)) $holidayDays[] = $d;
 }
-
 $nonWorkingDays = array_unique(array_merge($weekends, $holidayDays));
 
 // === Working day counts ===
@@ -78,7 +69,6 @@ $workingDays = 0;
 for ($d = 1; $d <= $daysInMonth; $d++) {
     if (!in_array($d, $nonWorkingDays)) $workingDays++;
 }
-
 $remainingWorkingDays = 0;
 for ($d = $today; $d <= $daysInMonth; $d++) {
     if (!in_array($d, $nonWorkingDays)) $remainingWorkingDays++;
@@ -94,134 +84,46 @@ $greenStatuses = ['In Office'];
 <head>
     <title>Attendance Rate Table</title>
     <style>
-        body {
-            margin:0;
-            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background:#f4f6f9;
-            color:#333;
-        }
-
-        /* Topbar */
-        .topbar {
-            position: fixed;
-            left:0; right:0; top:0;
-            height:70px;
-            background:#111; color:white;
-            display:flex; justify-content:space-between; align-items:center;
-            padding:0 30px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.3);
-            z-index:1000;
-        }
+        body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f4f6f9; color:#333; }
+        .topbar { position: fixed; left:0; right:0; top:0; height:70px; background:#111; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000; }
         .topbar .left { display:flex; align-items:center; gap:20px; }
         .topbar img { height:45px; }
         .topbar nav { display:flex; gap:15px; }
-        .topbar nav a {
-            color:white; text-decoration:none;
-            font-weight:500; padding:8px 14px;
-            border-radius:6px; transition:0.3s;
-        }
+        .topbar nav a { color:white; text-decoration:none; font-weight:500; padding:8px 14px; border-radius:6px; transition:0.3s; }
         .topbar nav a:hover { background:#333; }
-        .logout-btn {
-            background:#fff; color:#111; border:none;
-            padding:8px 18px; border-radius:10px;
-            cursor:pointer; font-weight:600; transition:0.3s;
-        }
+        .logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
         .logout-btn:hover { background:#e0e0e0; }
 
         h2 { text-align:center; margin:100px 0 10px 0; font-size:24px; color:#111; }
         .working-day-info { text-align:center; margin-bottom:20px; font-size:16px; color:#444; }
-
         .table-container { padding:20px; max-width:100%; max-height:80vh; overflow:auto; }
-        table {
-            border-collapse:collapse; table-layout:fixed;
-            min-width:1500px; background:white;
-            border-radius:8px; overflow:hidden;
-            box-shadow:0 2px 6px rgba(0,0,0,0.1);
-        }
-        th, td {
-            border:1px solid #555; padding:6px; text-align:center;
-            font-size:13px; word-wrap:break-word;
-        }
+        table { border-collapse:collapse; table-layout:fixed; min-width:1500px; background:white; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+        th, td { border:1px solid #555; padding:6px; text-align:center; font-size:13px; word-wrap:break-word; }
         th { background:#111; color:white; font-size:14px; }
         .dept-row td { background:#333; color:white; font-weight:bold; text-align:left; }
         .summary-row { background:#222; color:white; font-weight:bold; }
-        input[type=text], textarea {
-            width:95%; padding:4px; font-size:12px;
-            border:1px solid #888; border-radius:4px;
-        }
+        input[type=text], textarea { width:95%; padding:4px; font-size:12px; border:1px solid #888; border-radius:4px; }
         textarea { resize:vertical; height:50px; }
 
-        /* === Highlighting for weekends and holidays === */
-        .weekend, .holiday {
-            background:#dcdcdc !important;
-            color:#111;
-        }
-
+        .weekend, .holiday { background:#dcdcdc !important; color:#111; }
         .status-red { background:#ffb3b3; color:#b30000; font-weight:bold; }      
         .status-yellow { background:#fff5b3; color:#7a7000; font-weight:bold; }    
         .status-green { background:#b3ffb3; color:#006600; font-weight:bold; }     
 
-        .delete-btn {
-            background:transparent; border:none; cursor:pointer; font-size:14px;
-            color:#444; transition:0.2s; margin-left:4px;
-        }
+        .delete-btn { background:transparent; border:none; cursor:pointer; font-size:14px; color:#444; transition:0.2s; margin-left:4px; }
         .delete-btn:hover { color:#b30000; transform:scale(1.1); }
 
-        .submit-btn {
-            display:block; margin:20px auto;
-            padding:10px 20px; background:#111;
-            color:white; border:none; border-radius:6px;
-            font-size:14px; cursor:pointer; transition:background 0.3s;
-        }
+        .submit-btn { display:block; margin:20px auto; padding:10px 20px; background:#111; color:white; border:none; border-radius:6px; font-size:14px; cursor:pointer; transition:background 0.3s; }
         .submit-btn:hover { background:#333; }
 
-        /* === POPUP STYLES === */
-        .overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(6px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            animation: fadeIn 0.3s ease forwards;
-        }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 2000; animation: fadeIn 0.3s ease forwards; }
         .overlay.active { display: flex; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .popup {
-            background: #fff;
-            border-radius: 12px;
-            padding: 30px 40px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            transform: translateY(-20px);
-            animation: slideIn 0.35s ease forwards;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .popup { background: #fff; border-radius: 12px; padding: 30px 40px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); text-align: center; max-width: 400px; width: 90%; transform: translateY(-20px); animation: slideIn 0.35s ease forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         .popup h3 { margin-top:0; color:#111; }
         .popup p { color:#555; margin:10px 0 25px; }
-        .popup button {
-            padding:10px 20px;
-            border:none;
-            border-radius:8px;
-            cursor:pointer;
-            font-weight:600;
-            margin:0 10px;
-        }
+        .popup button { padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; margin:0 10px; }
         .btn-confirm { background:#111; color:white; }
         .btn-cancel { background:#ccc; color:#111; }
         .btn-confirm:hover { background:#333; }
@@ -306,9 +208,11 @@ $greenStatuses = ['In Office'];
                         $class = 'status-yellow';
                     } elseif (in_array($sub_status, $greenStatuses)) {
                         $class = 'status-green';
+                    } else {
+                        // Not submitted -> count as absent (but no background color)
+                        if (!$isNonWorking) $dailyMIA[$d]++;
                     }
 
-                    // Highlight weekends and public holidays
                     if ($isNonWorking) {
                         if (in_array($d, $holidayDays)) $class .= ' holiday';
                         else $class .= ' weekend';
@@ -326,10 +230,10 @@ $greenStatuses = ['In Office'];
     <?php endforeach; ?>
 
     <tr class="summary-row">
-        <td colspan="6">Total MC/AL/EL/HL/ML/MIA (excluding not submitted)</td>
+        <td colspan="6">Total MC/AL/EL/HL/ML/MIA (including not submitted)</td>
         <?php for ($d = 1; $d <= $daysInMonth; $d++): 
             $count = $dailyMIA[$d] ?? 0;
-            $output = in_array($d, $nonWorkingDays) ? '-' : ($count > 0 ? $count : 0);
+            $output = in_array($d, $nonWorkingDays) ? '-' : $count;
         ?>
             <td class="<?= in_array($d, $nonWorkingDays) ? 'weekend' : '' ?>"><?= $output ?></td>
         <?php endfor; ?>
@@ -366,7 +270,6 @@ $greenStatuses = ['In Office'];
 </form>
 </div>
 
-<!-- === POPUP OVERLAY (Shared) === -->
 <div class="overlay" id="popupOverlay">
     <div class="popup" id="popupBox">
         <h3 id="popupTitle"></h3>
