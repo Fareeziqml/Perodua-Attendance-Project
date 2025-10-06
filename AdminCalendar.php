@@ -9,6 +9,9 @@ if (!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
     exit;
 }
 
+$employee_name = $_SESSION['name'];
+$role = $_SESSION['role'];
+
 // Handle Add/Edit/Delete requests (AJAX)
 if (isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -83,15 +86,17 @@ while ($row = $result->fetch_assoc()) {
         /* Topbar */
         .topbar {
             position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
-            display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
+            display:flex; justify-content:space-between; align-items:center; padding:0 30px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
         }
         .topbar h3 { font-weight:500; }
-        .topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
+        .topbar .date-time { font-size:14px; opacity:0.85; display:flex; flex-direction:column; }
         .logout-btn { background:#fff; color:#000; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
-        .logout-btn:hover { background:#007a2e; }
+        .logout-btn:hover { background:#007a2e; color:#fff; }
 
         /* Calendar */
         .content { margin-left:250px; padding:100px 30px 30px 30px; }
+        .page-title { font-size:24px; font-weight:bold; color:#009739; margin-bottom:20px; text-align:center; }
         #calendar {
             max-width: 1000px; margin: auto; background:#fff; padding:20px;
             border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
@@ -124,15 +129,13 @@ while ($row = $result->fetch_assoc()) {
         /* Modal */
         .modal {
             display:none;
-            position:fixed;
-            top:0;left:0;width:100%;height:100%;
+            position:fixed; top:0;left:0;width:100%;height:100%;
             background:rgba(0,0,0,0.4);
             backdrop-filter: blur(5px);
             justify-content:center;align-items:center;
             z-index:2000;
             animation: fadeInBg 0.3s ease;
         }
-        @keyframes fadeInBg { from {opacity:0;} to {opacity:1;} }
         .modal-content {
             background:#fff;
             padding:20px;
@@ -141,7 +144,6 @@ while ($row = $result->fetch_assoc()) {
             box-shadow:0 8px 24px rgba(0,0,0,0.3);
             animation: fadeIn 0.4s ease;
         }
-        @keyframes fadeIn { from {opacity:0; transform:translateY(-20px);} to {opacity:1; transform:translateY(0);} }
         .modal-content input, .modal-content textarea {
             width:100%;padding:10px;margin-top:5px;margin-bottom:15px;border:1px solid #ccc;border-radius:5px;
             font-size:14px;
@@ -191,27 +193,31 @@ while ($row = $result->fetch_assoc()) {
 <!-- Sidebar -->
 <div class="sidebar">
     <h2>Perodua</h2>
-    <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
-    <a href="AdminDashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
-    <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
-    <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
-    <a href="AdminCalendar.php"><i class="fas fa-users"></i> Admin Calendar</a>
-    <a href="AdminEmployeeList.php"><i class="fas fa-user-cog"></i> Update Employee</a>
+    <a href="AdminAttendanceUpdate.php">My Attendance</a>
+    <a href="Admindashboard.php">Dashboard Report</a>
+    <a href="AdminAttendanceRecord.php">Attendance Report</a>
+    <a href="AttendanceRateTable.php">Attendance Rate</a>
+    <a href="AdminCalendar.php">Admin Calendar</a>
+    <a href="AdminEmployeeList.php">Update Employee</a>
 </div>
 
 <!-- Topbar -->
 <div class="topbar">
-    <h3>Admin Holiday Calendar</h3>
-    <div class="date-time">
-        <?php echo date("l, d M Y"); ?>
-        <form id="logoutForm" method="post" action="Logout.php" style="margin:0;">
-            <button class="logout-btn" type="submit">Logout</button>
-        </form>
+    <div>
+        <h3>Welcome, <?= htmlspecialchars($employee_name) ?> (<?= $role ?>)</h3>
+        <div class="date-time">
+            <span><?= date("l, d F Y") ?></span>
+            <span id="clock">--:--:--</span>
+        </div>
     </div>
+    <button class="logout-btn" onclick="showLogoutModal()">Logout</button>
 </div>
 
-<!-- Filter Bar -->
+<!-- Content -->
 <div class="content">
+    <div class="page-title">Admin Holiday Calendar</div>
+
+    <!-- Filter Bar -->
     <div class="filter-bar">
         <label>Month:</label>
         <select id="monthFilter">
@@ -238,7 +244,7 @@ while ($row = $result->fetch_assoc()) {
     <div id="calendar"></div>
 </div>
 
-<!-- Modal -->
+<!-- Holiday Modal -->
 <div class="modal" id="holidayModal">
     <div class="modal-content">
         <h3 id="modalTitle">Add Holiday</h3>
@@ -292,6 +298,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     calendar.render();
 
+    // Update clock
+    setInterval(()=>{
+        let now = new Date();
+        document.getElementById("clock").textContent =
+            now.toLocaleTimeString("en-GB");
+    },1000);
+
     // Filter
     document.getElementById("goFilter").addEventListener("click", function(){
         let month = document.getElementById("monthFilter").value;
@@ -323,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("holidayModal").style.display = "none";
     }
 
-    // Show popup
+    // Show popup with optional countdown
     function showPopup(msg, reload=false, countdown=false, callback=null) {
         document.getElementById("popupText").innerText = msg;
         document.getElementById("popupMsg").style.display = "flex";
@@ -377,11 +390,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Logout popup
-    document.getElementById("logoutForm").addEventListener("submit", function(e){
-        e.preventDefault();
-        showPopup("Logging out...", false, true, ()=> this.submit());
-    });
+    // Logout button popup
+    window.showLogoutModal = function(){
+        showPopup("Logging out...", false, true, ()=> {
+            window.location.href = "Logout.php";
+        });
+    }
 });
 </script>
 </body>
