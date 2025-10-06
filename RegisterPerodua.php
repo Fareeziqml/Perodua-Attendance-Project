@@ -5,29 +5,41 @@ if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
 $msg = "";
 if(isset($_POST['register_confirm'])) { // Triggered after confirmation
-    $employee_id = $_POST['employee_id'];
+    $employee_id = trim($_POST['employee_id']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $name = $_POST['name'];
-    $email = $_POST['email'];
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $pos = $_POST['POS']; // ✅ New POS field
     $department = $_POST['department'];
     $role = $_POST['role'];
 
-    // Handle photo upload
-    $photo = null;
-    if(isset($_FILES['photo']) && $_FILES['photo']['error'] == 0){
-        $targetDir = "uploads/";
-        if(!is_dir($targetDir)) mkdir($targetDir, 0777, true);
-        $photo = $targetDir . basename($_FILES["photo"]["name"]);
-        move_uploaded_file($_FILES["photo"]["tmp_name"], $photo);
-    }
+    // Check if employee_id or email already exists
+    $check = $conn->prepare("SELECT * FROM employee WHERE employee_id = ? OR email = ?");
+    $check->bind_param("ss", $employee_id, $email);
+    $check->execute();
+    $result = $check->get_result();
 
-    $stmt = $conn->prepare("INSERT INTO employee (employee_id, password, photo, name, email, department, role) VALUES (?,?,?,?,?,?,?)");
-    $stmt->bind_param("sssssss", $employee_id, $password, $photo, $name, $email, $department, $role);
-
-    if($stmt->execute()) {
-        $msg = "✅ Registration successful. You can now login.";
+    if($result->num_rows > 0) {
+        $msg = "❌ Employee ID or Email already exists. Please use a different one.";
     } else {
-        $msg = "❌ Error: " . $conn->error;
+        // Handle photo upload
+        $photo = null;
+        if(isset($_FILES['photo']) && $_FILES['photo']['error'] == 0){
+            $targetDir = "uploads/";
+            if(!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+            $photo = $targetDir . time() . "_" . basename($_FILES["photo"]["name"]);
+            move_uploaded_file($_FILES["photo"]["tmp_name"], $photo);
+        }
+
+        // ✅ Updated to include POS column
+        $stmt = $conn->prepare("INSERT INTO employee (employee_id, password, photo, name, email, POS, department, role) VALUES (?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("ssssssss", $employee_id, $password, $photo, $name, $email, $pos, $department, $role);
+
+        if($stmt->execute()) {
+            $msg = "✅ Registration successful. You can now login.";
+        } else {
+            $msg = "❌ Error: " . $conn->error;
+        }
     }
 }
 ?>
@@ -43,7 +55,6 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             background: #f9f9f9;
             color: #333;
         }
-
         header {
             position: relative;
             height: 35vh;
@@ -54,7 +65,6 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             color: white;
             overflow: hidden;
         }
-
         header video {
             position: absolute;
             top: 0; left: 0;
@@ -62,7 +72,6 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             object-fit: cover;
             z-index: -2;
         }
-
         header::after {
             content: "";
             position: absolute;
@@ -71,19 +80,16 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             background: rgba(1, 29, 12, 0.55);
             z-index: -1;
         }
-
         header h1 {
             font-size: 34px;
             margin: 10px 0;
             font-weight: bold;
         }
-
         header p {
             font-size: 16px;
             margin: 0;
             font-weight: 300;
         }
-
         .form-section {
             display: flex;
             justify-content: center;
@@ -92,7 +98,6 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             min-height: 65vh;
             background: #f9f9f9;
         }
-
         .form-box {
             background: #fff;
             border-radius: 15px;
@@ -101,18 +106,15 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
             animation: fadeIn 0.8s ease;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         h2 {
             color: #009739;
             text-align: center;
             margin-bottom: 25px;
         }
-
         input, select {
             width: 100%;
             padding: 12px;
@@ -121,13 +123,11 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             border-radius: 8px;
             transition: 0.3s;
         }
-
         input:focus, select:focus {
             border-color: #009739;
             outline: none;
             box-shadow: 0 0 6px rgba(0,151,57,0.5);
         }
-
         button {
             width: 100%;
             padding: 12px;
@@ -140,25 +140,21 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             cursor: pointer;
             transition: 0.3s;
         }
-
         button:hover {
             background: #007a2d;
         }
-
         .login-btn {
             background: #9E9E9E;
         }
         .login-btn:hover {
             background: #757575;
         }
-
         .msg { 
             text-align: center; 
             color: #d32f2f; 
             margin: 12px 0; 
             font-size: 14px;
         }
-
         footer {
             background: #161616ff;
             color: white;
@@ -166,7 +162,6 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             padding: 12px 0;
             font-size: 14px;
         }
-
         .popup-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -179,12 +174,10 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             animation: fadeInOverlay 0.3s ease;
             z-index: 999;
         }
-
         @keyframes fadeInOverlay {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
         .popup-box {
             background: #fff;
             padding: 25px;
@@ -194,24 +187,20 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             width: 360px;
             animation: fadeInPopup 0.4s ease;
         }
-
         @keyframes fadeInPopup {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
         }
-
         .popup-box h3 {
             margin-bottom: 15px;
             font-size: 20px;
             color: #333;
         }
-
         .popup-box .popup-buttons {
             margin-top: 20px;
             display: flex;
             justify-content: space-around;
         }
-
         .popup-box button {
             width: 40%;
         }
@@ -237,8 +226,28 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
             <input type="text" name="employee_id" placeholder="Employee ID" required>
             <input type="password" name="password" placeholder="Password" required>
             <input type="text" name="name" placeholder="Full Name" required>
-            <!-- New Gmail Input -->
+            <!-- Gmail only -->
             <input type="email" name="email" placeholder="Gmail" pattern="[a-z0-9._%+-]+@gmail\.com" required>
+            
+            <!-- ✅ New POS field -->
+            <select name="POS" required>
+                <option value="">--Select Position (POS)--</option>
+                <option>AA</option>
+                <option>GM</option>
+                <option>DGM</option>
+                <option>ACT DGM</option>
+                <option>ACT MGR</option>
+                <option>AM</option>
+                <option>CAA</option>
+                <option>ENG</option>
+                <option>EXEC</option>
+                <option>MGR</option>
+                <option>SM</option>
+                <option>TA</option>
+                <option>TM</option>
+                <option>TR</option>
+            </select>
+
             <select name="department" required>
                 <option value="">--Select Department--</option>
                 <option>Management</option>
@@ -280,11 +289,9 @@ if(isset($_POST['register_confirm'])) { // Triggered after confirmation
 function showPopup(){
     document.getElementById('popup').style.display = "flex";
 }
-
 function closePopup(){
     document.getElementById('popup').style.display = "none";
 }
-
 function confirmRegister(){
     const form = document.getElementById('registerForm');
     const hidden = document.createElement("input");
