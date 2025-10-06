@@ -20,14 +20,12 @@ $year  = date("Y");
 $today = date("d");
 $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
-// === Define Malaysian Public Holidays (adjust yearly) ===
-$publicHolidays = [ 
-    "$year-01-01", "$year-01-29", "$year-01-30",
-    "$year-03-18", "$year-03-31", "$year-04-01",
-    "$year-05-01", "$year-05-12", "$year-06-02",
-    "$year-10-20", "$year-11-02", "$year-12-11",
-    "$year-12-25"
-];
+// === Get Public Holidays from DB (holidays table) ===
+$publicHolidays = [];
+$res = $conn->query("SELECT holiday_date FROM holidays WHERE YEAR(holiday_date) = '$year' AND MONTH(holiday_date) = '$month'");
+while ($row = $res->fetch_assoc()) {
+    $publicHolidays[] = $row['holiday_date'];
+}
 
 // Get employees grouped by department (include POS)
 $emp_sql = "SELECT employee_id, name, POS, department, annual_leave, notes 
@@ -145,6 +143,7 @@ $greenStatuses = ['In Office'];
         <a href="AdminDashboard.php">Dashboard</a>
         <a href="AdminAttendanceRecord.php">Attendance Record</a>
         <a href="AttendanceRateTable.php">Attendance Rate</a>
+        <a href="AdminCalendar.php">Admin Calendar</a>
         <a href="AdminEmployeeList.php">Employee List</a>
     </nav>
     <button type="button" class="logout-btn" onclick="openPopup('logout')">Logout</button>
