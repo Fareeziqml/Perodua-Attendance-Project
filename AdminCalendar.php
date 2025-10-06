@@ -87,7 +87,7 @@ while ($row = $result->fetch_assoc()) {
         }
         .topbar h3 { font-weight:500; }
         .topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
-        .logout-btn { background:#009739; color:#fff; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
+        .logout-btn { background:#fff; color:#000; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
         .logout-btn:hover { background:#007a2e; }
 
         /* Calendar */
@@ -191,12 +191,12 @@ while ($row = $result->fetch_assoc()) {
 <!-- Sidebar -->
 <div class="sidebar">
     <h2>Perodua</h2>
-    <a href="AdminAttendanceUpdate.php">My Attendance</a>
-    <a href="Admindashboard.php">Dashboard Report</a>
-    <a href="AdminAttendanceRecord.php">Attendance Report</a>
-    <a href="AttendanceRateTable.php">Attendance Rate</a>
-    <a href="AdminCalendar.php">Admin Calendar</a>
-    <a href="AdminEmployeeList.php">Update Employee</a>
+    <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
+    <a href="AdminDashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
+    <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
+    <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
+    <a href="AdminCalendar.php"><i class="fas fa-users"></i> Admin Calendar</a>
+    <a href="AdminEmployeeList.php"><i class="fas fa-user-cog"></i> Update Employee</a>
 </div>
 
 <!-- Topbar -->
