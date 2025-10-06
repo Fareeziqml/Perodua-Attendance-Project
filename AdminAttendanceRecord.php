@@ -12,9 +12,9 @@ $employee_name = $_SESSION['employee_name'] ?? $_SESSION['name'];
 $role = $_SESSION['role'];
 $today = date("Y-m-d");
 
-// Fetch today's attendance per employee
+// ✅ Fetch today's attendance with POS included
 $sql = "
-    SELECT e.employee_id, e.name, e.department, e.photo, a.status, a.sub_status, a.note, a.date
+    SELECT e.employee_id, e.name, e.POS, e.department, e.photo, a.status, a.sub_status, a.note, a.date
     FROM employee e
     LEFT JOIN (
         SELECT *
@@ -230,6 +230,7 @@ function confirmLogout() {
                 <th>Employee ID</th>
                 <th>Photo</th>
                 <th>Name</th>
+                <th>POS</th> <!-- ✅ Added POS column header -->
                 <th>Department</th>
                 <th>Status</th>
                 <th>Sub-Status</th>
@@ -252,6 +253,7 @@ function confirmLogout() {
                 <td><?= htmlspecialchars($row['employee_id']) ?></td>
                 <td><?php if($row['photo']): ?><img src="<?= htmlspecialchars($row['photo']) ?>" alt="Photo"><?php else: ?><span>No Photo</span><?php endif; ?></td>
                 <td><?= htmlspecialchars($row['name']) ?></td>
+                <td><?= htmlspecialchars($row['POS'] ?? '-') ?></td> <!-- ✅ Added POS value -->
                 <td><?= htmlspecialchars($row['department']) ?></td>
                 <td><?= htmlspecialchars($row['status'] ?? 'Not Submitted') ?></td>
                 <td><?= htmlspecialchars($row['sub_status'] ?? '-') ?></td>
