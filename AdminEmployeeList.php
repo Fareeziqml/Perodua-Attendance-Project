@@ -1,9 +1,14 @@
 <?php
 session_start();
+
+// Load Composer autoload
+require __DIR__ . '/vendor/autoload.php'; 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 $conn = new mysqli("localhost", "root", "", "spareparts");
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
-if(!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
+if (!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
     header("Location: LoginPerodua.php");
     exit;
 }
@@ -78,6 +83,57 @@ if (isset($_POST['delete_confirm'])) {
     $msg = $stmt->execute() ? "🗑 Employee removed successfully" : "❌ Error: " . $conn->error;
 }
 
+/* --- IMPORT Employees from Excel --- */
+if (isset($_POST['import'])) {
+    $file = $_FILES['excel']['tmp_name'];
+    if ($file) {
+        $spreadsheet = IOFactory::load($file);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        $success = 0; 
+        $fail = 0; 
+        $skipped_ids = [];
+
+        foreach ($rows as $index => $row) {
+            if ($index == 0) continue; // skip header row
+
+            [$emp_id, $name, $email, $pos, $department, $role_field, $password_plain] = $row;
+
+            if (!$emp_id || !$name) continue; // skip empty rows
+
+            // Check if employee already exists
+            $check = $conn->prepare("SELECT employee_id FROM employee WHERE employee_id = ?");
+            $check->bind_param("s", $emp_id);
+            $check->execute();
+            $check->store_result();
+
+            if ($check->num_rows > 0) {
+                $fail++;
+                $skipped_ids[] = $emp_id;
+                continue; // skip duplicate
+            }
+
+            $password = password_hash($password_plain, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("INSERT INTO employee (employee_id, name, email, POS, department, role, password) VALUES (?,?,?,?,?,?,?)");
+            $stmt->bind_param("sssssss", $emp_id, $name, $email, $pos, $department, $role_field, $password);
+            if ($stmt->execute()) $success++; else { 
+                $fail++; 
+                $skipped_ids[] = $emp_id; 
+            }
+        }
+
+        if (!empty($skipped_ids)) {
+            $msg = "✅ Imported $success employees, ❌ Skipped $fail (IDs: " . implode(", ", $skipped_ids) . ")";
+        } else {
+            $msg = "✅ Imported $success employees, ❌ Skipped $fail";
+        }
+
+    } else {
+        $msg = "❌ Please upload a valid Excel file.";
+    }
+}
+
 /* --- Get Employee List --- */
 $result = $conn->query("SELECT * FROM employee ORDER BY department, name");
 $date_today = date("l, d F Y");
@@ -94,6 +150,7 @@ while ($row = $result->fetch_assoc()) {
     $departments[$row['department']][] = $row;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,91 +158,103 @@ while ($row = $result->fetch_assoc()) {
 <title>Employee List - GM</title>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
-* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
-body { background:#f2f2f2; color:#111; min-height:100vh; }
+        * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
+        body { background:#f2f2f2; color:#111; min-height:100vh; }
 
-/* Sidebar */
-.sidebar {
-    position: fixed; left:0; top:0; bottom:0; width:260px;
-    background:#111; color:white; padding:30px 0;
-    box-shadow:3px 0 15px rgba(0,0,0,0.25); transition:0.3s;
-}
-.sidebar h2 { text-align:center; margin-bottom:30px; font-size:28px; color:#fff; letter-spacing:1px; }
-.sidebar a {
-    display:flex; align-items:center; gap:15px; padding:14px 25px; margin:5px 15px;
-    border-radius:12px; font-weight:500; color:white; text-decoration:none;
-    transition:0.3s, box-shadow 0.3s;
-}
-.sidebar a i { font-size:18px; width:25px; text-align:center; }
-.sidebar a span { flex:1; }
-.sidebar a:hover { background:#222; box-shadow:0 4px 15px rgba(0,0,0,0.3); transform:translateX(5px); }
-.sidebar a.active { background:#4CAF50; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
+        /* Sidebar */
+        .sidebar {
+            position: fixed; left:0; top:0; bottom:0; width:260px;
+            background:#111; color:white; padding:30px 0;
+            box-shadow:3px 0 15px rgba(0,0,0,0.25); transition:0.3s;
+        }
+        .sidebar h2 { text-align:center; margin-bottom:30px; font-size:28px; color:#fff; letter-spacing:1px; }
+        .sidebar a {
+            display:flex; align-items:center; gap:15px; padding:14px 25px; margin:5px 15px;
+            border-radius:12px; font-weight:500; color:white; text-decoration:none;
+            transition:0.3s, box-shadow 0.3s;
+        }
+        .sidebar a i { font-size:18px; width:25px; text-align:center; }
+        .sidebar a span { flex:1; }
+        .sidebar a:hover { background:#222; box-shadow:0 4px 15px rgba(0,0,0,0.3); transform:translateX(5px); }
+        .sidebar a.active { background:#4CAF50; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
 
-/* Topbar */
-.topbar { position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
-display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000; }
-.topbar h3 { font-weight:500; font-size:18px; }
-.topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
-.logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
-.logout-btn:hover { background:#e0e0e0; }
+        /* Topbar */
+        .topbar { position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
+        display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000; }
+        .topbar h3 { font-weight:500; font-size:18px; }
+        .topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
+        .logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
+        .logout-btn:hover { background:#e0e0e0; }
 
-/* Main Content */
-.main-content { margin-left: 250px; padding: 100px 30px 30px 30px; flex: 1; transition: margin-left 0.3s; }
+        /* Main Content */
+        .main-content { margin-left: 250px; padding: 100px 30px 30px 30px; flex: 1; transition: margin-left 0.3s; }
 
-.card-container { display:flex; gap:20px; justify-content:center; margin-bottom:30px; flex-wrap:wrap; }
-.card { width:180px; padding:20px; border-radius:15px; color:white; text-align:center; box-shadow:0 8px 20px rgba(0,0,0,0.08); transition:0.3s; }
-.card:hover { transform: translateY(-3px); }
-.card h3 { font-size:16px; margin-bottom:8px; color:white; }
-.card h2 { font-size:26px; margin-bottom:10px; color:white; }
-.card-gm, .card-emp { background: #fff; color: #111; }
-.card-gm h3, .card-gm h2, .card-emp h3, .card-emp h2 { color: #111; }
+        .card-container { display:flex; gap:20px; justify-content:center; margin-bottom:30px; flex-wrap:wrap; }
+        .card { width:180px; padding:20px; border-radius:15px; color:white; text-align:center; box-shadow:0 8px 20px rgba(0,0,0,0.08); transition:0.3s; }
+        .card:hover { transform: translateY(-3px); }
+        .card h3 { font-size:16px; margin-bottom:8px; color:white; }
+        .card h2 { font-size:26px; margin-bottom:10px; color:white; }
+        .card-gm, .card-emp { background: #fff; color: #111; }
+        .card-gm h3, .card-gm h2, .card-emp h3, .card-emp h2 { color: #111; }
 
-.container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 12px 25px rgba(0,0,0,0.1); margin-bottom:40px; }
-h2 { text-align: center; color: #131613ff; margin-bottom: 25px; font-size:30px; }
-h3.dept-title { margin-top:30px; background:#111; color:white; padding:10px 15px; border-radius:8px; font-size:20px; }
+        .container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 12px 25px rgba(0,0,0,0.1); margin-bottom:40px; }
+        h2 { text-align: center; color: #131613ff; margin-bottom: 25px; font-size:30px; }
+        h3.dept-title { margin-top:30px; background:#111; color:white; padding:10px 15px; border-radius:8px; font-size:20px; }
 
-table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05); }
-th, td { padding: 14px; text-align: center; }
-th { background: #262926ff; color: white; text-transform: uppercase; font-size:14px; }
-td { background: #fefefe; transition:0.3s; }
-tr:hover td { background: #f1f1f1; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05); }
+        th, td { padding: 14px; text-align: center; }
+        th { background: #262926ff; color: white; text-transform: uppercase; font-size:14px; }
+        td { background: #fefefe; transition:0.3s; }
+        tr:hover td { background: #f1f1f1; }
 
-button { cursor: pointer; font-weight: 600; }
-.btn { padding: 7px 14px; border: none; border-radius: 8px; margin:2px; font-size:14px; transition:0.3s; }
-.btn-add { background: #4CAF50; color: white; }
-.btn-add:hover { background:#388E3C; transform:scale(1.05); }
-.btn-edit { background: #2196F3; color: white; }
-.btn-edit:hover { background:#1976D2; transform:scale(1.05); }
-.btn-del { background: #d32f2f; color: white; }
-.btn-del:hover { background:#b71c1c; transform:scale(1.05); }
+        button { cursor: pointer; font-weight: 600; }
+        .btn { padding: 7px 14px; border: none; border-radius: 8px; margin:2px; font-size:14px; transition:0.3s; }
+        .btn-add { background: #4CAF50; color: white; }
+        .btn-add:hover { background:#388E3C; transform:scale(1.05); }
+        .btn-edit { background: #2196F3; color: white; }
+        .btn-edit:hover { background:#1976D2; transform:scale(1.05); }
+        .btn-del { background: #d32f2f; color: white; }
+        .btn-del:hover { background:#b71c1c; transform:scale(1.05); }
 
-img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; }
+        img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; }
 
-.overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); backdrop-filter:blur(5px); z-index:999; opacity:0; transition:opacity 0.3s; }
-.overlay.active { display:block; opacity:1; }
+        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); backdrop-filter:blur(5px); z-index:999; opacity:0; transition:opacity 0.3s; }
+        .overlay.active { display:block; opacity:1; }
 
-.form-popup { display:none; background:#fff; padding:30px; border-radius:15px; box-shadow:0 12px 35px rgba(0,0,0,0.2); position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.9); z-index:1000; width:380px; text-align:center; opacity:0; transition:all 0.3s ease; }
-.form-popup.active { display:block; opacity:1; transform:translate(-50%,-50%) scale(1); }
+        .form-popup { display:none; background:#fff; padding:30px; border-radius:15px; box-shadow:0 12px 35px rgba(0,0,0,0.2); position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.9); z-index:1000; width:380px; text-align:center; opacity:0; transition:all 0.3s ease; }
+        .form-popup.active { display:block; opacity:1; transform:translate(-50%,-50%) scale(1); }
 
-input, select { width:100%; padding:12px 14px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; transition:0.3s; }
-input:focus, select:focus { border-color:#2e7d32; outline:none; }
+        input, select { width:100%; padding:12px 14px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; transition:0.3s; }
+        input:focus, select:focus { border-color:#2e7d32; outline:none; }
 
-    @media(max-width: 900px){
-    .sidebar { position: fixed; left: -250px; width: 250px; transition: left 0.3s; }
-    .sidebar.active { left: 0; }
-    .main-content { margin-left: 0; padding: 100px 15px; }
-    table, th, td { font-size: 12px; }
-    .stats { flex-direction: column; }
-    }
+            @media(max-width: 900px){
+            .sidebar { position: fixed; left: -250px; width: 250px; transition: left 0.3s; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0; padding: 100px 15px; }
+            table, th, td { font-size: 12px; }
+            .stats { flex-direction: column; }
+            }
 
 </style>
 </head>
 <body>
 
+<?php if (!empty($msg)): ?>
+<script>
+Swal.fire({
+  title: "Notification",
+  html: "<?= addslashes($msg) ?>",
+  icon: "<?= (strpos($msg, '❌') !== false) ? 'error' : ((strpos($msg, '🗑') !== false) ? 'warning' : 'success') ?>",
+  confirmButtonText: "OK",
+  confirmButtonColor: "#3085d6"
+});
+</script>
+<?php endif; ?>
+
 <!-- Sidebar -->
-<div class="sidebar">
-    <h2>Perodua</h2>
 <div class="sidebar">
     <h2>Perodua</h2>
     <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><i class="fas fa-calendar-day"></i><span>My Attendance</span></a>
@@ -194,7 +263,6 @@ input:focus, select:focus { border-color:#2e7d32; outline:none; }
     <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><i class="fas fa-calendar-check"></i><span>Attendance Reports</span></a>
     <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><i class="fas fa-calendar-alt"></i><span>Calendar Management</span></a>
     <a href="AttendanceRateTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AttendanceRateTable.php'?'active':'' ?>"><i class="fas fa-users"></i><span>Attendance Statistics</span></a>
-</div>
 </div>
 
 <!-- Topbar -->
@@ -227,6 +295,7 @@ input:focus, select:focus { border-color:#2e7d32; outline:none; }
 <div class="container">
     <h2>Employee Management</h2>
     <button class="btn btn-add" onclick="openForm('addForm')">➕ Add New Employee</button>
+    <button class="btn btn-edit" onclick="openForm('importForm')">📂 Import from Excel</button> <!-- ✅ Added this -->
 
     <?php foreach ($departments as $dept => $employees): ?>
         <h3 class="dept-title"><?= htmlspecialchars($dept) ?> Department</h3>
@@ -261,7 +330,7 @@ input:focus, select:focus { border-color:#2e7d32; outline:none; }
 </div>
 </div>
 
-<!-- Forms (Add/Edit/Delete/Logout same as before) -->
+<!-- Forms (Add/Edit/Delete/Import/Logout same as before) -->
 <div class="overlay" id="overlay"></div>
 
 <!-- Add Form -->
@@ -304,6 +373,19 @@ input:focus, select:focus { border-color:#2e7d32; outline:none; }
         <button type="submit" name="add" class="btn btn-add">Add</button>
         <button type="button" class="btn btn-del" onclick="closeForm()">Cancel</button>
     </form>
+</div>
+
+<!-- Import Form -->
+<div class="form-popup" id="importForm">
+    <h3>Import Employees (Excel)</h3>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="excel" accept=".xls,.xlsx" required>
+        <button type="submit" name="import" class="btn btn-add">Upload & Import</button>
+        <button type="button" class="btn btn-del" onclick="closeForm()">Cancel</button>
+    </form>
+    <p style="font-size:12px; margin-top:10px; color:#444;">
+        Excel Format: EmployeeID | Name | Email | POS | Department | Role | Password
+    </p>
 </div>
 
 <!-- Edit Form -->
