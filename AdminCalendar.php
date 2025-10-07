@@ -73,15 +73,22 @@ while ($row = $result->fetch_assoc()) {
         * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
         body { background:#f2f2f2; color:#111; min-height:100vh; }
 
-        /* Sidebar */
+    /* Sidebar */
         .sidebar {
-            position: fixed; left:0; top:0; bottom:0; width:250px;
+            position: fixed; left:0; top:0; bottom:0; width:260px;
             background:#111; color:white; padding:30px 0;
-            box-shadow:3px 0 15px rgba(0,0,0,0.2);
+            box-shadow:3px 0 15px rgba(0,0,0,0.25); transition:0.3s;
         }
-        .sidebar h2 { text-align:center; margin-bottom:25px; font-size:26px; color:white; }
-        .sidebar a { display:flex; align-items:center; gap:12px; padding:12px 25px; margin:5px 15px; border-radius:8px; font-weight:500; transition:0.3s; color:white; text-decoration:none; }
-        .sidebar a:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+        .sidebar h2 { text-align:center; margin-bottom:30px; font-size:28px; color:#fff; letter-spacing:1px; }
+        .sidebar a {
+            display:flex; align-items:center; gap:15px; padding:14px 25px; margin:5px 15px;
+            border-radius:12px; font-weight:500; color:white; text-decoration:none;
+            transition:0.3s, box-shadow 0.3s;
+        }
+        .sidebar a i { font-size:18px; width:25px; text-align:center; }
+        .sidebar a span { flex:1; }
+        .sidebar a:hover { background:#222; box-shadow:0 4px 15px rgba(0,0,0,0.3); transform:translateX(5px); }
+        .sidebar a.active { background:#4CAF50; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
 
         /* Topbar */
         .topbar {
@@ -193,18 +200,18 @@ while ($row = $result->fetch_assoc()) {
 <!-- Sidebar -->
 <div class="sidebar">
     <h2>Perodua</h2>
-    <a href="AdminAttendanceUpdate.php">My Attendance</a>
-    <a href="Admindashboard.php">Dashboard Report</a>
-    <a href="AdminAttendanceRecord.php">Attendance Report</a>
-    <a href="AttendanceRateTable.php">Attendance Rate</a>
-    <a href="AdminCalendar.php">Admin Calendar</a>
-    <a href="AdminEmployeeList.php">Update Employee</a>
+    <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><i class="fas fa-calendar-day"></i><span>My Attendance</span></a>
+    <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><i class="fas fa-user-cog"></i><span>Employee Management</span></a>
+    <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"><i class="fas fa-chart-line"></i><span>Analysis Dashboard</span></a>
+    <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><i class="fas fa-calendar-check"></i><span>Attendance Reports</span></a>
+    <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><i class="fas fa-calendar-alt"></i><span>Calendar Management</span></a>
+    <a href="AttendanceRateTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AttendanceRateTable.php'?'active':'' ?>"><i class="fas fa-users"></i><span>Attendance Statistics</span></a>
 </div>
 
 <!-- Topbar -->
 <div class="topbar">
     <div>
-        <h3>Welcome, <?= htmlspecialchars($employee_name) ?> (<?= $role ?>)</h3>
+        <h3>Welcome, <?= htmlspecialchars($employee_name) ?></h3>
         <div class="date-time">
             <span><?= date("l, d F Y") ?></span>
             <span id="clock">--:--:--</span>
@@ -215,7 +222,7 @@ while ($row = $result->fetch_assoc()) {
 
 <!-- Content -->
 <div class="content">
-    <div class="page-title">Admin Holiday Calendar</div>
+    <div class="page-title">Company Holidays</div>
 
     <!-- Filter Bar -->
     <div class="filter-bar">
