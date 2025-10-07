@@ -105,19 +105,33 @@ while ($row = $result->fetch_assoc()) {
 * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
 body { background:#f2f2f2; color:#111; min-height:100vh; }
 
-.sidebar { position: fixed; left:0; top:0; bottom:0; width:250px; background:#111; color:white; padding:30px 0; box-shadow:3px 0 15px rgba(0,0,0,0.2); }
-.sidebar h2 { text-align:center; margin-bottom:25px; font-size:26px; color:white; }
-.sidebar a { display:flex; align-items:center; gap:12px; padding:12px 25px; margin:5px 15px; border-radius:8px; font-weight:500; transition:0.3s; color:white; }
-.sidebar a:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
-.sidebar i { font-size:18px; }
+/* Sidebar */
+.sidebar {
+    position: fixed; left:0; top:0; bottom:0; width:260px;
+    background:#111; color:white; padding:30px 0;
+    box-shadow:3px 0 15px rgba(0,0,0,0.25); transition:0.3s;
+}
+.sidebar h2 { text-align:center; margin-bottom:30px; font-size:28px; color:#fff; letter-spacing:1px; }
+.sidebar a {
+    display:flex; align-items:center; gap:15px; padding:14px 25px; margin:5px 15px;
+    border-radius:12px; font-weight:500; color:white; text-decoration:none;
+    transition:0.3s, box-shadow 0.3s;
+}
+.sidebar a i { font-size:18px; width:25px; text-align:center; }
+.sidebar a span { flex:1; }
+.sidebar a:hover { background:#222; box-shadow:0 4px 15px rgba(0,0,0,0.3); transform:translateX(5px); }
+.sidebar a.active { background:#4CAF50; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
 
-.topbar { position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000; }
-.topbar h3 { font-weight:500; }
+/* Topbar */
+.topbar { position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
+display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000; }
+.topbar h3 { font-weight:500; font-size:18px; }
 .topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
 .logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
 .logout-btn:hover { background:#e0e0e0; }
 
-.main-content { margin-left: 220px; padding: 100px 30px 30px 30px; flex: 1; transition: margin-left 0.3s; }
+/* Main Content */
+.main-content { margin-left: 250px; padding: 100px 30px 30px 30px; flex: 1; transition: margin-left 0.3s; }
 
 .card-container { display:flex; gap:20px; justify-content:center; margin-bottom:30px; flex-wrap:wrap; }
 .card { width:180px; padding:20px; border-radius:15px; color:white; text-align:center; box-shadow:0 8px 20px rgba(0,0,0,0.08); transition:0.3s; }
@@ -129,7 +143,6 @@ body { background:#f2f2f2; color:#111; min-height:100vh; }
 
 .container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 12px 25px rgba(0,0,0,0.1); margin-bottom:40px; }
 h2 { text-align: center; color: #131613ff; margin-bottom: 25px; font-size:30px; }
-
 h3.dept-title { margin-top:30px; background:#111; color:white; padding:10px 15px; border-radius:8px; font-size:20px; }
 
 table { width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 10px; overflow: hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05); }
@@ -158,12 +171,14 @@ img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; }
 input, select { width:100%; padding:12px 14px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; transition:0.3s; }
 input:focus, select:focus { border-color:#2e7d32; outline:none; }
 
-@media(max-width:900px){
-    .sidebar { width: 60px; padding-top:10px;}
-    .sidebar h2, .sidebar a span { display:none;}
-    .topbar { left:60px; padding:0 20px; }
-    .main-content { margin-left:60px; padding:20px; }
-}
+    @media(max-width: 900px){
+    .sidebar { position: fixed; left: -250px; width: 250px; transition: left 0.3s; }
+    .sidebar.active { left: 0; }
+    .main-content { margin-left: 0; padding: 100px 15px; }
+    table, th, td { font-size: 12px; }
+    .stats { flex-direction: column; }
+    }
+
 </style>
 </head>
 <body>
@@ -171,17 +186,21 @@ input:focus, select:focus { border-color:#2e7d32; outline:none; }
 <!-- Sidebar -->
 <div class="sidebar">
     <h2>Perodua</h2>
-    <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
-    <a href="Admindashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
-    <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
-    <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
-    <a href="AdminEmployeeList.php"><i class="fas fa-users"></i> Update Employee</a>
+<div class="sidebar">
+    <h2>Perodua</h2>
+    <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><i class="fas fa-calendar-day"></i><span>My Attendance</span></a>
+    <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><i class="fas fa-user-cog"></i><span>Employee Management</span></a>
+    <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"><i class="fas fa-chart-line"></i><span>Analysis Dashboard</span></a>
+    <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><i class="fas fa-calendar-check"></i><span>Attendance Reports</span></a>
+    <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><i class="fas fa-calendar-alt"></i><span>Calendar Management</span></a>
+    <a href="AttendanceRateTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AttendanceRateTable.php'?'active':'' ?>"><i class="fas fa-users"></i><span>Attendance Statistics</span></a>
+</div>
 </div>
 
 <!-- Topbar -->
 <div class="topbar">
     <div>
-        <h3>Welcome, <?= htmlspecialchars($employee_name) ?> (<?= $role ?>)</h3>
+        <h3>Welcome, <?= htmlspecialchars($employee_name) ?></h3>
         <div class="date-time">
             <span><?= $date_today ?></span>
             <span id="clock">--:--:--</span>
@@ -206,7 +225,7 @@ input:focus, select:focus { border-color:#2e7d32; outline:none; }
 </div>
 
 <div class="container">
-    <h2>Employee List by Department</h2>
+    <h2>Employee Management</h2>
     <button class="btn btn-add" onclick="openForm('addForm')">➕ Add New Employee</button>
 
     <?php foreach ($departments as $dept => $employees): ?>
