@@ -24,7 +24,7 @@ if ($stmt->affected_rows) {
     // Load PHPMailer
     $mail = require __DIR__ . "/mailer.php";
 
-    $resetLink = "http://localhost/PERODUA_PROJECT/reset-password.php?token=$token";    
+    $resetLink = "http://localhost/PERODUA_PROJECT2/reset-password.php?token=$token";    
 
 
     try {
