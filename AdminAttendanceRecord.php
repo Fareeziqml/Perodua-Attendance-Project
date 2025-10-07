@@ -12,7 +12,7 @@ $employee_name = $_SESSION['employee_name'] ?? $_SESSION['name'];
 $role = $_SESSION['role'];
 $today = date("Y-m-d");
 
-// ✅ Fetch today's attendance with POS included
+// Fetch today's attendance with POS included
 $sql = "
     SELECT e.employee_id, e.name, e.POS, e.department, e.photo, a.status, a.sub_status, a.note, a.date
     FROM employee e
@@ -62,23 +62,55 @@ while($row = $result->fetch_assoc()){
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
-body { background:#f2f2f2; color:#111; min-height:100vh; }
+body { background:#f2f2f2; color:#111; min-height:100vh; overflow-x:hidden; }
 
 /* Sidebar */
 .sidebar {
-    position: fixed; left:0; top:0; bottom:0; width:250px;
+    position: fixed; left:0; top:0; bottom:0; width:260px;
     background:#111; color:white; padding:30px 0;
-    box-shadow:3px 0 15px rgba(0,0,0,0.2);
+    box-shadow:3px 0 15px rgba(0,0,0,0.25); transition:0.3s;
+    z-index:1100;
 }
-.sidebar h2 { text-align:center; margin-bottom:25px; font-size:26px; color:white; }
-.sidebar a { display:flex; align-items:center; gap:12px; padding:12px 25px; margin:5px 15px; border-radius:8px; font-weight:500; transition:0.3s; color:white; }
-.sidebar a:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
-.sidebar i { font-size:18px; }
+.sidebar h2 { text-align:center; margin-bottom:30px; font-size:28px; color:#fff; letter-spacing:1px; }
+.sidebar a {
+    display:flex; align-items:center; gap:15px; padding:14px 25px; margin:5px 15px;
+    border-radius:12px; font-weight:500; color:white; text-decoration:none;
+    transition:0.3s, box-shadow 0.3s;
+}
+.sidebar a i { font-size:18px; width:25px; text-align:center; }
+.sidebar a span { flex:1; }
+.sidebar a:hover { background:#222; box-shadow:0 4px 15px rgba(0,0,0,0.3); transform:translateX(5px); }
+.sidebar a.active { background:#4CAF50; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
+
+/* Overlay for mobile */
+.overlay {
+    display:none;
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    z-index:1000;
+    transition:0.3s;
+}
+
+/* Hamburger toggle */
+.sidebar-toggle {
+    display:none;
+    position: fixed;
+    top:15px;
+    left:15px;
+    background:#4CAF50;
+    border:none;
+    padding:10px 12px;
+    border-radius:8px;
+    color:white;
+    cursor:pointer;
+    z-index:1200;
+}
 
 /* Topbar */
 .topbar {
-    position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
-    display:flex; justify-content:space-between; align-items:center; padding:0 30px; 
+    position: fixed; left:260px; right:0; top:0; height:70px; background:#111; color:white;
+    display:flex; justify-content:space-between; align-items:center; padding:0 30px;
     box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
 }
 .topbar h3 { font-weight:500; }
@@ -87,13 +119,13 @@ body { background:#f2f2f2; color:#111; min-height:100vh; }
 .logout-btn:hover { background:#e0e0e0; }
 
 /* Main content */
-.main-content { margin-left: 250px; padding: 100px 30px 30px 30px; flex:1; }
+.main-content { margin-left: 260px; padding: 100px 30px 30px 30px; flex:1; }
 h2 { text-align:center; color:#222; margin-bottom:15px; font-size:28px; }
 h4 { text-align:center; color:#555; margin-top:0; font-size:16px; }
 
 /* Stat Cards */
 .stats { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-bottom:25px; }
-.card { flex:1; min-width:180px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.07); text-align:center; transition: transform 0.3s; }
+.card { flex:1; min-width:160px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.07); text-align:center; transition: transform 0.3s; }
 .card:hover { transform: translateY(-5px); }
 .card h3 { font-size:24px; color:#222; margin-bottom:8px; }
 .card p { font-size:14px; color:#555; }
@@ -101,8 +133,18 @@ h4 { text-align:center; color:#555; margin-top:0; font-size:16px; }
 /* Container */
 .container { background:#fff; padding:25px 30px; border-radius:15px; box-shadow:0 6px 18px rgba(0,0,0,0.1); }
 
+/* Table wrapper for scroll */
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 65vh;
+    margin-top:20px;
+    border-radius:10px;
+    border:1px solid #ddd;
+}
+
 /* Table */
-table { width:100%; border-collapse: collapse; margin-top:20px; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+table { width:100%; border-collapse: collapse; min-width:700px; }
 th, td { padding:12px 15px; text-align:center; border-bottom:1px solid #eee; }
 th { background:#111; color:white; font-size:14px; text-transform:uppercase; }
 td { background:#fefefe; font-size:15px; }
@@ -116,7 +158,7 @@ img { width:70px; height:70px; object-fit:cover; border-radius:50%; }
 .status-none td { background-color:#ffffff !important; }
 
 /* Legend */
-.legend { margin:15px 0; display:flex; justify-content:center; gap:25px; }
+.legend { margin:15px 0; display:flex; justify-content:center; gap:25px; flex-wrap:wrap; }
 .legend-item { display:flex; align-items:center; gap:10px; font-size:14px; }
 .legend-box { width:22px; height:22px; border-radius:4px; border:1px solid #ccc; }
 .legend-red { background:#f8d7da; }
@@ -124,7 +166,7 @@ img { width:70px; height:70px; object-fit:cover; border-radius:50%; }
 .legend-green { background:#d4edda; }
 .legend-white { background:#ffffff; }
 
-/* Modal with fade + blur */
+/* Modal */
 .modal {
     display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     justify-content:center; align-items:center; z-index:2000;
@@ -134,7 +176,6 @@ img { width:70px; height:70px; object-fit:cover; border-radius:50%; }
     transition: opacity 0.4s ease;
 }
 .modal.show { display:flex; opacity:1; }
-
 .modal-content {
     background:#fff; padding:25px; border-radius:12px; width:320px; text-align:center;
     transform: translateY(-20px);
@@ -153,47 +194,67 @@ img { width:70px; height:70px; object-fit:cover; border-radius:50%; }
 /* Responsive */
 @media(max-width:900px) {
     .main-content { padding:120px 15px 30px 15px; margin-left:0; }
-    .topbar { left:0; }
+    .topbar { left:0; padding:0 15px; }
+    .sidebar { width:260px; left:-260px; top:0; padding-top:20px; transition:0.3s; }
+    .sidebar.show { left:0; }
+    .sidebar-toggle { display:block; }
+    .overlay.show { display:block; }
+    .table-wrapper { max-height: 60vh; }
+    table { min-width:600px; font-size:13px; }
+    th, td { padding:8px 10px; font-size:12px; }
 }
+
+/* Buttons hover effect */
+button:hover { opacity:0.85; transition:0.3s; }
+
 </style>
 <script>
+// Clock
 function updateClock() {
     document.getElementById("clock").textContent=new Date().toLocaleTimeString();
 }
 setInterval(updateClock,1000);
 updateClock();
 
-// Modal
-function showLogoutModal() {
-    const modal = document.getElementById('logoutModal');
-    modal.classList.add('show');
+// Modals
+function showLogoutModal() { document.getElementById('logoutModal').classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function confirmLogout() { document.getElementById('logoutForm').submit(); }
+
+// Mobile sidebar
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('show');
+    document.querySelector('.overlay').classList.toggle('show');
 }
-function closeModal(id){
-    const modal = document.getElementById(id);
-    modal.classList.remove('show');
-    setTimeout(()=> modal.style.display='none',400);
-}
-function confirmLogout() {
-    document.getElementById('logoutForm').submit();
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('show');
+    document.querySelector('.overlay').classList.remove('show');
 }
 </script>
 </head>
 <body>
 
+<!-- Overlay -->
+<div class="overlay" onclick="closeSidebar()"></div>
+
+<!-- Hamburger -->
+<button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
 <!-- Sidebar -->
 <div class="sidebar">
     <h2>Perodua</h2>
-    <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
-    <a href="AdminDashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
-    <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
-    <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
-    <a href="AdminEmployeeList.php"><i class="fas fa-user-cog"></i> Update Employee</a>
+    <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><i class="fas fa-calendar-day"></i><span>My Attendance</span></a>
+    <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><i class="fas fa-user-cog"></i><span>Employee Management</span></a>
+    <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"><i class="fas fa-chart-line"></i><span>Analysis Dashboard</span></a>
+    <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><i class="fas fa-calendar-check"></i><span>Attendance Reports</span></a>
+    <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><i class="fas fa-calendar-alt"></i><span>Calendar Management</span></a>
+    <a href="AttendanceRateTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AttendanceRateTable.php'?'active':'' ?>"><i class="fas fa-users"></i><span>Attendance Statistics</span></a>
 </div>
 
 <!-- Topbar -->
 <div class="topbar">
     <div>
-        <h3>Welcome, <?= htmlspecialchars($employee_name) ?> (<?= $role ?>)</h3>
+        <h3>Welcome, <?= htmlspecialchars($employee_name) ?> </h3>
         <div class="date-time">
             <span><?= date("l, d F Y") ?></span>
             <span id="clock">--:--:--</span>
@@ -204,6 +265,7 @@ function confirmLogout() {
 
 <!-- Main Content -->
 <div class="main-content">
+
     <!-- Stat Cards -->
     <div class="stats">
         <div class="card"><h3><?= $stats['available'] ?></h3><p>Available</p></div>
@@ -213,7 +275,7 @@ function confirmLogout() {
     </div>
 
     <div class="container">
-        <h2>Attendance Records</h2>
+        <h2>Attendance Reports</h2>
         <h4><?= $today ?></h4>
 
         <!-- Legend -->
@@ -224,13 +286,15 @@ function confirmLogout() {
             <div class="legend-item"><div class="legend-box legend-white"></div> Not Submitted</div>
         </div>
 
+        <!-- Scrollable Table -->
+        <div class="table-wrapper">
         <table>
             <tr>
                 <th>No</th>
                 <th>Employee ID</th>
                 <th>Photo</th>
                 <th>Name</th>
-                <th>POS</th> <!-- ✅ Added POS column header -->
+                <th>POS</th>
                 <th>Department</th>
                 <th>Status</th>
                 <th>Sub-Status</th>
@@ -253,7 +317,7 @@ function confirmLogout() {
                 <td><?= htmlspecialchars($row['employee_id']) ?></td>
                 <td><?php if($row['photo']): ?><img src="<?= htmlspecialchars($row['photo']) ?>" alt="Photo"><?php else: ?><span>No Photo</span><?php endif; ?></td>
                 <td><?= htmlspecialchars($row['name']) ?></td>
-                <td><?= htmlspecialchars($row['POS'] ?? '-') ?></td> <!-- ✅ Added POS value -->
+                <td><?= htmlspecialchars($row['POS'] ?? '-') ?></td>
                 <td><?= htmlspecialchars($row['department']) ?></td>
                 <td><?= htmlspecialchars($row['status'] ?? 'Not Submitted') ?></td>
                 <td><?= htmlspecialchars($row['sub_status'] ?? '-') ?></td>
@@ -261,6 +325,7 @@ function confirmLogout() {
             </tr>
             <?php endforeach; ?>
         </table>
+        </div>
     </div>
 </div>
 
