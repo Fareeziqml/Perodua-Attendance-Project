@@ -91,6 +91,7 @@ $greenStatuses = ['In Office'];
         .topbar nav a:hover { background:#333; }
         .logout-btn { background:#fff; color:#111; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
         .logout-btn:hover { background:#e0e0e0; }
+        .topbar a.active { background:#4CAF50; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
 
         h2 { text-align:center; margin:100px 0 10px 0; font-size:24px; color:#111; }
         .working-day-info { text-align:center; margin-bottom:20px; font-size:16px; color:#444; }
@@ -139,17 +140,17 @@ $greenStatuses = ['In Office'];
         </div>
     </div>
     <nav>
-        <a href="AdminAttendanceUpdate.php">My Attendance</a>
-        <a href="AdminDashboard.php">Dashboard</a>
-        <a href="AdminAttendanceRecord.php">Attendance Record</a>
-        <a href="AttendanceRateTable.php">Attendance Rate</a>
-        <a href="AdminCalendar.php">Admin Calendar</a>
-        <a href="AdminEmployeeList.php">Employee List</a>
+    <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><i class="fas fa-calendar-day"></i><span>My Attendance</span></a>
+    <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><i class="fas fa-user-cog"></i><span>Employee Management</span></a>
+    <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"><i class="fas fa-chart-line"></i><span>Analysis Dashboard</span></a>
+    <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><i class="fas fa-calendar-check"></i><span>Attendance Reports</span></a>
+    <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><i class="fas fa-calendar-alt"></i><span>Calendar Management</span></a>
+    <a href="AttendanceRateTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AttendanceRateTable.php'?'active':'' ?>"><i class="fas fa-users"></i><span>Attendance Statistics</span></a>
     </nav>
     <button type="button" class="logout-btn" onclick="openPopup('logout')">Logout</button>
 </div>
 
-<h2>Attendance Rate Table - <?= date("F Y") ?></h2>
+<h2>Attendance Statistics - <?= date("F Y") ?></h2>
 <div class="working-day-info">
     <div>Total Working Days: <?= $workingDays ?> days</div>
     <div>Count Day Before End: <?= $remainingWorkingDays ?> working days left (from today)</div>
