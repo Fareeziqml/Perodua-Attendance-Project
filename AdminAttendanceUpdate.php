@@ -268,7 +268,7 @@ function closeSidebar() {
 
 <div class="topbar">
     <div>
-        <h3>Welcome, <?= htmlspecialchars($employee_name) ?></h3>
+        <h3>Welcome</h3>
         <div class="date-time">
             <span><?= date("l, d F Y") ?></span>
             <span id="clock">--:--:--</span>
