@@ -3,14 +3,31 @@ session_start();
 $conn = new mysqli("localhost", "root", "", "spareparts");
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
-if(!isset($_SESSION['employee_id']) || $_SESSION['role'] != "GM") {
+// Check session
+if(!isset($_SESSION['employee_id']) || !isset($_SESSION['role'])) {
     header("Location: LoginPerodua.php");
     exit;
 }
 
 $emp_id = $_SESSION['employee_id'];
-$employee_name = $_SESSION['employee_name'] ?? "GM"; 
-$role = $_SESSION['role'] ?? "GM";
+$role = $_SESSION['role'];
+
+// Fetch employee name from DB if not in session
+if (!isset($_SESSION['employee_name'])) {
+    $stmt = $conn->prepare("SELECT name FROM employee WHERE id = ?");
+    $stmt->bind_param("i", $emp_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $employee_name = $row['name'];
+        $_SESSION['employee_name'] = $employee_name; // store in session for later
+    } else {
+        $employee_name = "Employee"; // fallback
+    }
+} else {
+    $employee_name = $_SESSION['employee_name'];
+}
+
 $today = date("Y-m-d");
 $msg = "";
 
@@ -83,94 +100,117 @@ $futureRecords = $future->get_result();
 <title>GM Attendance - Perodua</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
-    body { background:#f2f2f2; color:#111; min-height:100vh; }
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif; }
+body { background:#f2f2f2; color:#111; min-height:100vh; overflow-x:hidden; }
 
-    /* Sidebar */
-    .sidebar {
-        position: fixed; left:0; top:0; bottom:0; width:250px;
-        background:#111; color:white; padding:30px 0;
-        box-shadow:3px 0 15px rgba(0,0,0,0.2);
-    }
-    .sidebar h2 { text-align:center; margin-bottom:25px; font-size:26px; color:white; }
-    .sidebar a { display:flex; align-items:center; gap:12px; padding:12px 25px; margin:5px 15px; border-radius:8px; font-weight:500; transition:0.3s; color:white; }
-    .sidebar a:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
-    .sidebar i { font-size:18px; }
+/* Sidebar */
+.sidebar {
+    position: fixed; left:0; top:0; bottom:0; width:260px;
+    background:#111; color:white; padding:30px 0;
+    box-shadow:3px 0 15px rgba(0,0,0,0.25); transition:0.3s;
+    z-index:1100;
+}
+.sidebar h2 { text-align:center; margin-bottom:30px; font-size:28px; color:#fff; letter-spacing:1px; }
+.sidebar a {
+    display:flex; align-items:center; gap:15px; padding:14px 25px; margin:5px 15px;
+    border-radius:12px; font-weight:500; color:white; text-decoration:none;
+    transition:0.3s, box-shadow 0.3s;
+}
+.sidebar a i { font-size:18px; width:25px; text-align:center; }
+.sidebar a span { flex:1; }
+.sidebar a:hover { background:#222; box-shadow:0 4px 15px rgba(0,0,0,0.3); transform:translateX(5px); }
+.sidebar a.active { background:#4CAF50; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
 
-    /* Topbar */
-    .topbar {
-        position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white;
-        display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:1000;
-    }
-    .topbar h3 { font-weight:500; }
-    .topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
-    .logout-btn { background:#fff; color:#000; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
-    .logout-btn:hover { background:#333; }
+/* Overlay for mobile sidebar */
+.overlay {
+    display:none;
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    z-index:1000;
+    transition:0.3s;
+}
 
-    /* Main Content */
-    .main-content { margin-left:250px; padding:100px 30px 30px 30px; }
-    h2 { text-align:center; color:#111; margin-bottom:30px; }
-    .msg { text-align:center; color:#d32f2f; font-weight:500; margin:10px 0; }
+/* Mobile toggle button */
+.sidebar-toggle {
+    display:none;
+    position: fixed;
+    top:15px;
+    left:15px;
+    background:#4CAF50;
+    border:none;
+    padding:10px 12px;
+    border-radius:8px;
+    color:white;
+    cursor:pointer;
+    z-index:1200;
+}
 
-    /* Card */
-    .card { background:#fff; padding:25px; border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.1); margin-bottom:30px; transition:0.3s; }
-    .card:hover { box-shadow:0 12px 25px rgba(0,0,0,0.2); }
+/* Topbar */
+.topbar { position: fixed; left:250px; right:0; top:0; height:70px; background:#111; color:white; display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:900; }
+.topbar h3 { font-weight:500; }
+.topbar .date-time { font-size:14px; opacity:0.85; display:flex; gap:15px; }
+.logout-btn { background:#fff; color:#000; border:none; padding:8px 18px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s; }
+.logout-btn:hover { background:#333; }
 
-    /* Forms */
-    form { display:flex; flex-wrap:wrap; justify-content:center; gap:15px; align-items:center; margin-bottom:20px; }
-    select, input[type=text], input[type=date] { padding:10px 12px; border:1px solid #ccc; border-radius:8px; min-width:160px; }
-    button { padding:8px 18px; border:none; border-radius:8px; cursor:pointer; font-weight:500; transition:0.3s; }
+/* Main content */
+.main-content { margin-left:250px; padding:100px 30px 30px 30px; }
+h2 { text-align:center; color:#111; margin-bottom:30px; }
+.msg { text-align:center; color:#d32f2f; font-weight:500; margin:10px 0; }
 
-    button[type="submit"]:not(.delete-btn):not(.logout-btn) { background:#4CAF50; color:#000; }
-    button[type="submit"]:not(.delete-btn):not(.logout-btn):hover { background:#45a049; }
+.card { background:#fff; padding:25px; border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.1); margin-bottom:30px; transition:0.3s; overflow-x:auto; }
+.card:hover { box-shadow:0 12px 25px rgba(0,0,0,0.2); }
 
-    .delete-btn { background:#e60000; color:white; border-radius:8px; }
-    .delete-btn:hover { background:#b30000; }
+form { display:flex; flex-wrap:wrap; justify-content:center; gap:15px; align-items:center; margin-bottom:20px; }
+select, input[type=text], input[type=date] { padding:10px 12px; border:1px solid #ccc; border-radius:8px; min-width:160px; }
+button { padding:8px 18px; border:none; border-radius:8px; cursor:pointer; font-weight:500; transition:0.3s; }
+button[type="submit"]:not(.delete-btn):not(.logout-btn) { background:#4CAF50; color:#000; }
+button[type="submit"]:not(.delete-btn):not(.logout-btn):hover { background:#45a049; }
+.delete-btn { background:#e60000; color:white; border-radius:8px; }
+.delete-btn:hover { background:#b30000; }
+.toggle-btn { background:#2196F3; color:white; margin:10px 0; border-radius:8px; }
+.toggle-btn:hover { background:#1976d2; }
 
-    .toggle-btn { background:#2196F3; color:white; margin:10px 0; border-radius:8px; }
-    .toggle-btn:hover { background:#1976d2; }
+table { width:100%; border-collapse: collapse; margin-top:15px; border-radius:8px; overflow:hidden; min-width:600px; }
+th, td { padding:12px; text-align:center; border-bottom:1px solid #eee; }
+th { background:#111; color:white; text-transform:uppercase; font-size:14px; }
+tr:hover { background:#f1f1f1; }
+.badge { padding:5px 10px; border-radius:12px; color:white; font-weight:600; display:inline-block; }
+.badge-mia { background:#e53935; }
+.badge-outstation { background:#ffb300; color:#000; }
+.badge-available { background:#43a047; }
 
-    /* Table */
-    table { width:100%; border-collapse: collapse; margin-top:15px; border-radius:8px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05); }
-    th, td { padding:12px; text-align:center; border-bottom:1px solid #eee; }
-    th { background:#111; color:white; text-transform:uppercase; font-size:14px; }
-    tr:hover { background:#f1f1f1; }
-    .badge { padding:5px 10px; border-radius:12px; color:white; font-weight:600; display:inline-block; }
-    .badge-mia { background:#e53935; }
-    .badge-outstation { background:#ffb300; color:#000; }
-    .badge-available { background:#43a047; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); backdrop-filter: blur(6px); justify-content:center; align-items:center; z-index:2000; opacity:0; transition: opacity 0.3s ease; }
+.modal.show { opacity:1; }
+.modal-content { background:#fff; padding:25px; border-radius:12px; width:90%; max-width:360px; text-align:center; transform: translateY(-30px); opacity:0; animation: fadeSlideIn 0.4s forwards; }
+@keyframes fadeSlideIn { to { transform: translateY(0); opacity:1; } }
+.modal-content h3 { margin-bottom:20px; color:#111; }
+.modal-buttons { display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px; }
+.modal-buttons button { flex:1; min-width:100px; border-radius:8px; }
 
-    /* Modal */
-    .modal { 
-        display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-        background:rgba(0,0,0,0.4); 
-        backdrop-filter: blur(6px); /* NEW blur effect */
-        justify-content:center; align-items:center; z-index:2000;
-        opacity:0; transition: opacity 0.3s ease; /* NEW fade */
-    }
-    .modal.show { opacity:1; } /* active state */
-    .modal-content { 
-        background:#fff; padding:25px; border-radius:12px; width:320px; text-align:center; 
-        transform: translateY(-30px); opacity:0;
-        animation: fadeSlideIn 0.4s forwards; /* NEW animation */
-    }
-    @keyframes fadeSlideIn {
-        to { transform: translateY(0); opacity:1; }
-    }
-    .modal-content h3 { margin-bottom:20px; color:#111; }
-    .modal-buttons { display:flex; justify-content:space-around; }
-    .modal-buttons button { width:100px; border-radius:8px; }
-
-    /* Responsive */
-    @media(max-width:900px) {
-        .main-content { padding:120px 15px 30px 15px; }
-        form { flex-direction:column; }
-        select, input[type=text], input[type=date], button { width:90%; }
-    }
+@media(max-width:900px) {
+    .sidebar { left:-260px; }
+    .sidebar.show { left:0; }
+    .overlay.show { display:block; }
+    .sidebar-toggle { display:block; }
+    .topbar { left:0; padding:0 15px; }
+    .main-content { margin-left:0; padding:120px 15px 30px 15px; }
+    form { flex-direction:column; }
+    select, input[type=text], input[type=date], button { width:95%; }
+    table { min-width:0; display:block; overflow-x:auto; }
+}
 </style>
 <script>
 let deleteId = null;
 
+// Clock
+function updateClock() {
+    const now=new Date();
+    document.getElementById("clock").textContent=now.toLocaleTimeString();
+}
+setInterval(updateClock,1000);
+
+// Status/Sub-Status
 function updateSubStatusOptions() {
     const status = document.getElementById('status').value;
     const subStatusSelect = document.getElementById('sub_status');
@@ -182,58 +222,53 @@ function updateSubStatusOptions() {
     options.forEach(opt=>{ let o=document.createElement('option'); o.value=o.text=opt; subStatusSelect.appendChild(o); });
 }
 
+// Toggle future applications
 function toggleFuture() {
     const section=document.getElementById("futureSection");
     section.style.display=(section.style.display==="none"||section.style.display==="")?"block":"none";
 }
 
-function updateClock() {
-    const now=new Date();
-    document.getElementById("clock").textContent=now.toLocaleTimeString();
-}
-setInterval(updateClock,1000);
+// Delete modal
+function showDeleteModal(id) { deleteId = id; const modal = document.getElementById('deleteModal'); modal.style.display='flex'; setTimeout(()=>modal.classList.add('show'),10); }
+function confirmDelete() { document.getElementById('delete_id_input').value=deleteId; document.getElementById('deleteForm').submit(); }
+function closeModal(modalId) { const modal=document.getElementById(modalId); modal.classList.remove('show'); setTimeout(()=>modal.style.display='none',300); }
 
-// Modal functions
-function showDeleteModal(id) {
-    deleteId = id;
-    const modal = document.getElementById('deleteModal');
-    modal.style.display = 'flex';
-    setTimeout(()=> modal.classList.add('show'), 10);
-}
-function confirmDelete() {
-    document.getElementById('delete_id_input').value = deleteId;
-    document.getElementById('deleteForm').submit();
-}
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    modal.classList.remove('show');
-    setTimeout(()=> modal.style.display='none', 300);
+// Logout modal
+function showLogoutModal() { const modal = document.getElementById('logoutModal'); modal.style.display='flex'; setTimeout(()=>modal.classList.add('show'),10); }
+function confirmLogout() { document.getElementById('logoutForm').submit(); }
+
+// Mobile sidebar toggle
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('show');
+    document.querySelector('.overlay').classList.toggle('show');
 }
 
-function showLogoutModal() {
-    const modal = document.getElementById('logoutModal');
-    modal.style.display = 'flex';
-    setTimeout(()=> modal.classList.add('show'), 10);
-}
-function confirmLogout() {
-    document.getElementById('logoutForm').submit();
+// Close sidebar when overlay clicked
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('show');
+    document.querySelector('.overlay').classList.remove('show');
 }
 </script>
 </head>
 <body>
 
+<div class="overlay" onclick="closeSidebar()"></div>
+
+<button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
 <div class="sidebar">
     <h2>Perodua</h2>
-    <a href="AdminAttendanceUpdate.php"><i class="fas fa-file-alt"></i> My Attendance</a>
-    <a href="AdminDashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard Report</a>
-    <a href="AdminAttendanceRecord.php"><i class="fas fa-calendar-check"></i> Attendance Report</a>
-    <a href="AttendanceRateTable.php"><i class="fas fa-users"></i> Attendance Rate</a>
-    <a href="AdminEmployeeList.php"><i class="fas fa-user-cog"></i> Update Employee</a>
+    <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><i class="fas fa-calendar-day"></i><span>My Attendance</span></a>
+    <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><i class="fas fa-user-cog"></i><span>Employee Management</span></a>
+    <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"><i class="fas fa-chart-line"></i><span>Analysis Dashboard</span></a>
+    <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><i class="fas fa-calendar-check"></i><span>Attendance Reports</span></a>
+    <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><i class="fas fa-calendar-alt"></i><span>Calendar Management</span></a>
+    <a href="AttendanceRateTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AttendanceRateTable.php'?'active':'' ?>"><i class="fas fa-users"></i><span>Attendance Statistics</span></a>
 </div>
 
 <div class="topbar">
     <div>
-        <h3>Welcome, <?= htmlspecialchars($employee_name) ?> (<?= $role ?>)</h3>
+        <h3>Welcome, <?= htmlspecialchars($employee_name) ?></h3>
         <div class="date-time">
             <span><?= date("l, d F Y") ?></span>
             <span id="clock">--:--:--</span>
@@ -243,7 +278,7 @@ function confirmLogout() {
 </div>
 
 <div class="main-content">
-    <h2>GM Attendance - Staff ID: <?= htmlspecialchars($emp_id) ?></h2>
+    <h2>Administrator Attendance - Staff ID: <?= htmlspecialchars($emp_id) ?></h2>
 
     <div class="card">
         <form method="POST">
@@ -278,9 +313,7 @@ function confirmLogout() {
                     <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($row['status']) ?></span></td>
                     <td><?= htmlspecialchars($row['sub_status']) ?></td>
                     <td><?= htmlspecialchars($row['note']) ?></td>
-                    <td>
-                        <button class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button>
-                    </td>
+                    <td><button class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button></td>
                 </tr>
             <?php endwhile; else: ?>
                 <tr><td colspan="5">❌ No attendance submitted for today.</td></tr>
@@ -290,7 +323,7 @@ function confirmLogout() {
 
     <div class="card">
         <button type="button" class="toggle-btn" onclick="toggleFuture()">Show/Hide Future Applications</button>
-        <div id="futureSection">
+        <div id="futureSection" style="display:none;">
             <h3>Future Applications</h3>
             <table>
                 <tr><th>Date</th><th>Status</th><th>Sub-Status</th><th>Note</th><th>Action</th></tr>
@@ -306,9 +339,7 @@ function confirmLogout() {
                         <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($row['status']) ?></span></td>
                         <td><?= htmlspecialchars($row['sub_status']) ?></td>
                         <td><?= htmlspecialchars($row['note']) ?></td>
-                        <td>
-                            <button class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button>
-                        </td>
+                        <td><button class="delete-btn" onclick="showDeleteModal(<?= $row['id'] ?>)">Delete</button></td>
                     </tr>
                 <?php endwhile; else: ?>
                     <tr><td colspan="5">No future applications found.</td></tr>
