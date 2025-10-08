@@ -83,7 +83,6 @@ if (isset($_POST['delete_confirm'])) {
     $msg = $stmt->execute() ? "🗑 Employee removed successfully" : "❌ Error: " . $conn->error;
 }
 
-/* --- IMPORT Employees from Excel --- */
 if (isset($_POST['import'])) {
     $file = $_FILES['excel']['tmp_name'];
     if ($file) {
@@ -98,9 +97,17 @@ if (isset($_POST['import'])) {
         foreach ($rows as $index => $row) {
             if ($index == 0) continue; // skip header row
 
-            [$emp_id, $name, $email, $pos, $department, $role_field, $password_plain] = $row;
+            // Assign values, use empty string if cell is empty
+            $emp_id = trim($row[0]);
+            $name = trim($row[1]);
+            $email = isset($row[2]) ? trim($row[2]) : "";
+            $pos = isset($row[3]) ? trim($row[3]) : "";
+            $department = isset($row[4]) ? trim($row[4]) : "";
+            $role_field = isset($row[5]) ? trim($row[5]) : "";
+            $password_plain = isset($row[6]) ? trim($row[6]) : "";
 
-            if (!$emp_id || !$name) continue; // skip empty rows
+            // Only require employee_id and name
+            if (!$emp_id || !$name) continue;
 
             // Check if employee already exists
             $check = $conn->prepare("SELECT employee_id FROM employee WHERE employee_id = ?");
@@ -114,10 +121,15 @@ if (isset($_POST['import'])) {
                 continue; // skip duplicate
             }
 
+            // If password is empty, you can set a default password (optional)
+            if ($password_plain == "") $password_plain = "default123";
+
             $password = password_hash($password_plain, PASSWORD_DEFAULT);
+
             $stmt = $conn->prepare("INSERT INTO employee (employee_id, name, email, POS, department, role, password) VALUES (?,?,?,?,?,?,?)");
             $stmt->bind_param("sssssss", $emp_id, $name, $email, $pos, $department, $role_field, $password);
-            if ($stmt->execute()) $success++; else { 
+            if ($stmt->execute()) $success++; 
+            else { 
                 $fail++; 
                 $skipped_ids[] = $emp_id; 
             }
@@ -133,6 +145,7 @@ if (isset($_POST['import'])) {
         $msg = "❌ Please upload a valid Excel file.";
     }
 }
+
 
 /* --- Get Employee List --- */
 $result = $conn->query("SELECT * FROM employee ORDER BY department, name");
@@ -384,7 +397,7 @@ Swal.fire({
         <button type="button" class="btn btn-del" onclick="closeForm()">Cancel</button>
     </form>
     <p style="font-size:12px; margin-top:10px; color:#444;">
-        Excel Format: EmployeeID | Name | Email | POS | Department | Role | Password
+        Excel Format: EmployeeID | Name | Email | POS | Section  | Role | Password
     </p>
 </div>
 
