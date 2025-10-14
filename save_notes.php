@@ -28,6 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    echo "<script>alert('Notes and Annual Leave saved successfully!'); window.location.href='AttendanceRateTable.php';</script>";
+    echo "<script>alert('Notes and Annual Leave saved successfully!'); window.location.href='AdminAttendanceTable.php';</script>";
 }
 ?>
