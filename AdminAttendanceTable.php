@@ -143,7 +143,7 @@ $greenStatuses = ['In Office'];
     <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><span>My Attendance</span></a>
     <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><span>Employee Management</span></a>
     <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"></i><span>Analysis Dashboard</span></a>
-    <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><span>Attendance List</span></a>
+    <a href="AdminAttendanceList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceList.php'?'active':'' ?>"><span>Attendance List</span></a>
     <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><span>Calendar Management</span></a>
     <a href="AdminAttendanceTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceTable.php'?'active':'' ?>"><span>Attendance Table</span></a>
     </nav>
