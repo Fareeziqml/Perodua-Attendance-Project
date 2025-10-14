@@ -243,12 +243,12 @@ function closeSidebar() {
 <!-- Sidebar -->
 <div class="sidebar">
     <h2>Perodua</h2>
-    <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><i class="fas fa-calendar-day"></i><span>My Attendance</span></a>
-    <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><i class="fas fa-user-cog"></i><span>Employee Management</span></a>
-    <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"><i class="fas fa-chart-line"></i><span>Analysis Dashboard</span></a>
-    <a href="AdminAttendanceRecord.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceRecord.php'?'active':'' ?>"><i class="fas fa-calendar-check"></i><span>Attendance Reports</span></a>
-    <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><i class="fas fa-calendar-alt"></i><span>Calendar Management</span></a>
-    <a href="AttendanceRateTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AttendanceRateTable.php'?'active':'' ?>"><i class="fas fa-users"></i><span>Attendance Statistics</span></a>
+    <a href="AdminAttendanceUpdate.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceUpdate.php'?'active':'' ?>"><span>My Attendance</span></a>
+    <a href="AdminEmployeeList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminEmployeeList.php'?'active':'' ?>"><span>Employee Management</span></a>
+    <a href="AdminDashboard.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminDashboard.php'?'active':'' ?>"></i><span>Analysis Dashboard</span></a>
+    <a href="AdminAttendanceList.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceList.php'?'active':'' ?>"><span>Attendance List</span></a>
+    <a href="AdminCalendar.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminCalendar.php'?'active':'' ?>"><span>Calendar Management</span></a>
+    <a href="AdminAttendanceTable.php" class="<?= basename($_SERVER['PHP_SELF'])=='AdminAttendanceTable.php'?'active':'' ?>"><span>Attendance Table</span></a>
 </div>
 
 <!-- Topbar -->
@@ -270,17 +270,17 @@ function closeSidebar() {
     <div class="stats">
         <div class="card"><h3><?= $stats['available'] ?></h3><p>Available</p></div>
         <div class="card"><h3><?= $stats['outstation'] ?></h3><p>OutStation</p></div>
-        <div class="card"><h3><?= $stats['mia'] ?></h3><p>MIA / MC</p></div>
+        <div class="card"><h3><?= $stats['mia'] ?></h3><p>MC</p></div>
         <div class="card"><h3><?= $stats['none'] ?></h3><p>Not Submitted</p></div>
     </div>
 
     <div class="container">
-        <h2>Attendance Reports</h2>
+        <h2>Attendance List</h2>
         <h4><?= $today ?></h4>
 
         <!-- Legend -->
         <div class="legend">
-            <div class="legend-item"><div class="legend-box legend-red"></div> MIA / MC</div>
+            <div class="legend-item"><div class="legend-box legend-red"></div>MC</div>
             <div class="legend-item"><div class="legend-box legend-yellow"></div> OutStation</div>
             <div class="legend-item"><div class="legend-box legend-green"></div> Available</div>
             <div class="legend-item"><div class="legend-box legend-white"></div> Not Submitted</div>
@@ -295,7 +295,7 @@ function closeSidebar() {
                 <th>Photo</th>
                 <th>Name</th>
                 <th>POS</th>
-                <th>Department</th>
+                <th>Section</th>
                 <th>Status</th>
                 <th>Sub-Status</th>
                 <th>Note</th>
